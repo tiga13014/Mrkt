@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Hay Day · Studio d’annonces</title>
+<meta name="description" content="Crée de belles annonces Hay Day (trade, vente, achat) pour Discord, avec les images des produits du jeu.">
+<meta name="theme-color" content="#f4f2ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141311" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f2ec;--surface:#fff;--surface2:#f8f6f1;--ink:#211e1a;--mut:#7b746b;--line:#e7e2d8;--line2:#d9d2c4;
+  --acc:#2f7d4f;--acc-ink:#fff;--acc-soft:#e4f1e8;--gold:#f2b705;--gold-soft:#fff4cf;--danger:#cf4335;
+  --r:18px;--sh:0 1px 2px rgba(30,25,15,.05),0 6px 20px rgba(30,25,15,.06);
+  --tab-h:64px;--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#141311;--surface:#1e1d1a;--surface2:#262420;--ink:#f3efe7;--mut:#a59e93;--line:#33302a;--line2:#433f37;
+  --acc:#5cc483;--acc-ink:#0d2014;--acc-soft:#1f3327;--gold-soft:#3a3115;--sh:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:600 15px/1.4 Nunito,system-ui,-apple-system,sans-serif;padding-top:var(--safe-t);padding-bottom:calc(var(--tab-h) + var(--safe-b) + 16px)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+img{display:block}
+.disp{font-family:'Lilita One',Nunito,sans-serif;font-weight:400;letter-spacing:.01em}
+[hidden]{display:none!important}
+input[type=search]::-webkit-search-cancel-button,input[type=search]::-webkit-search-decoration{-webkit-appearance:none;appearance:none;display:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line);padding:10px 14px 10px}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.brand .logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(145deg,#ffcf3d,#f29a00);display:grid;place-items:center;font-size:19px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.12)}
+.brand h1{font:400 21px 'Lilita One',Nunito,sans-serif;margin:0;letter-spacing:.01em}
+.brand small{display:block;color:var(--mut);font-size:12px;font-weight:700;margin-top:-2px}
+.brand .sp{flex:1}
+.profiles{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px}
+.profiles::-webkit-scrollbar{display:none}
+.pchip{flex:none;display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);font-weight:800;font-size:14px;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.pchip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pchip.add{width:38px;padding:0;justify-content:center;font-size:20px;color:var(--mut)}
+
+/* ---------- layout ---------- */
+.app{max-width:1280px;margin:0 auto;padding:14px}
+.panel{display:none;gap:14px}
+.panel,.stack,.fieldset,.list,.sheet-b,.menu{grid-template-columns:minmax(0,1fr)}
+.card,.item{min-width:0}
+body[data-tab=items] #p-items,body[data-tab=style] #p-style,body[data-tab=images] #p-images{display:grid}
+#preview{display:none}
+body[data-tab=prev] #preview{display:block}
+body[data-tab=prev] #editor{display:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--sh)}
+.card h2{font:400 19px 'Lilita One',Nunito,sans-serif;margin:0 0 4px;letter-spacing:.01em}
+.card h2 .n{font:800 12px Nunito;color:var(--mut);margin-left:6px;vertical-align:2px}
+.hint{color:var(--mut);font-size:13px;margin:0 0 10px}
+.row{display:flex;gap:8px;align-items:center}
+.stack{display:grid;gap:10px}
+@media (min-width:980px){
+  body{padding-bottom:24px}
+  .app{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);grid-template-areas:"tabs pv" "ed pv";grid-template-rows:auto 1fr;column-gap:22px;align-items:start;padding:20px}
+  .tabbar{grid-area:tabs}
+  #editor{grid-area:ed}
+  #preview{grid-area:pv;display:block!important;position:sticky;top:116px}
+  body[data-tab=prev] #editor{display:block}
+  .tabbar{position:sticky!important;top:112px;bottom:auto!important;z-index:20;margin:0 0 14px;border-radius:16px;border:1px solid var(--line)!important;padding:6px!important}
+  .tabbar [data-t=prev]{display:none}
+  #cv{width:auto!important;max-width:100%;max-height:calc(100vh - 230px);margin:0 auto}
+  #mini{display:none!important}
+}
+
+/* ---------- form controls ---------- */
+.inp,.sel{width:100%;min-height:44px;border:1px solid var(--line2);background:var(--surface2);border-radius:12px;padding:9px 12px;outline:none;transition:border-color .15s,box-shadow .15s;min-width:0}
+.inp:focus,.sel:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent);background:var(--surface)}
+.inp::placeholder{color:color-mix(in srgb,var(--mut) 75%,transparent)}
+.lbl{display:block;font-size:12px;font-weight:800;color:var(--mut);margin:0 0 5px;letter-spacing:.02em}
+.fieldset{display:grid;gap:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{min-height:44px;border-radius:12px;border:1px solid var(--line2);background:var(--surface);padding:0 14px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .08s,background .15s}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.btn.ghost{background:transparent}
+.btn.dashed{border-style:dashed;background:transparent;width:100%;color:var(--mut)}
+.btn.danger{color:var(--danger)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:13px;border-radius:10px}
+.btn.full{width:100%}
+.seg{display:flex;background:var(--surface2);border:1px solid var(--line2);border-radius:13px;padding:3px;gap:3px}
+.seg button{flex:1;min-height:38px;border:0;border-radius:10px;background:transparent;font-weight:800;font-size:14px;color:var(--mut);white-space:nowrap;padding:0 8px}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;font-weight:800}
+.switch input{appearance:none;width:50px;height:30px;border-radius:99px;background:var(--line2);position:relative;transition:background .2s;flex:none;margin:0}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+.switch input:checked{background:var(--acc)}
+.switch input:checked::after{transform:translateX(20px)}
+
+/* ---------- search ---------- */
+.sbox{position:relative}
+.sbox svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--mut);pointer-events:none}
+.sbox .inp{padding-left:44px;padding-right:44px;min-height:50px;font-size:16px;border-radius:14px}
+.sbox .clr{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;border-radius:10px;background:transparent;color:var(--mut);font-size:18px;display:none}
+.sbox.has .clr{display:block}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:10px -14px 0;padding:0 14px 2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);font-weight:800;font-size:13px;color:var(--mut);white-space:nowrap}
+.chip.on{background:var(--acc-soft);border-color:var(--acc);color:var(--ink)}
+.target{display:flex;align-items:center;gap:10px;margin-top:10px}
+.target .lbl{margin:0;white-space:nowrap}
+.target .seg{flex:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px;margin-top:12px}
+.tile{position:relative;border:1px solid var(--line);background:var(--surface2);border-radius:14px;padding:8px 4px 7px;display:grid;justify-items:center;gap:4px;min-height:108px;text-align:center;transition:transform .08s,border-color .15s}
+.tile:active{transform:scale(.95)}
+.tile:hover{border-color:var(--line2)}
+.tile .th{width:54px;height:54px;font-size:34px}
+.tile b{font-size:12px;font-weight:800;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tile small{font-size:10.5px;color:var(--mut);line-height:1.1;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.tile .in{position:absolute;top:5px;right:5px;min-width:20px;height:20px;border-radius:99px;background:var(--acc);color:var(--acc-ink);font-size:11px;font-weight:900;display:grid;place-items:center;padding:0 5px}
+.tile.miss .th{opacity:.55}
+.th{display:grid;place-items:center;line-height:1;overflow:hidden}
+.th img{width:100%;height:100%;object-fit:contain}
+.empty{color:var(--mut);text-align:center;padding:18px 8px;font-size:14px}
+.more{margin-top:10px}
+
+/* ---------- summary ---------- */
+.summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px}
+.summary .k{font-size:12px;color:var(--mut);font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.summary .v{font:400 22px 'Lilita One',Nunito,sans-serif;display:flex;align-items:center;gap:6px}
+.coin{display:inline-block;width:1em;height:1em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3a8 0,#ffcf33 40%,#e59a00 100%);box-shadow:inset 0 0 0 .09em #b86e00,inset 0 0 0 .2em rgba(255,255,255,.0);vertical-align:-.12em;flex:none}
+
+/* ---------- item cards ---------- */
+.list{display:grid;gap:10px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:6px 2px -2px}
+.sec-h h3{font:400 18px 'Lilita One',Nunito,sans-serif;margin:0}
+.sec-h span{font-size:12px;color:var(--mut);font-weight:800}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px;display:grid;gap:10px;box-shadow:var(--sh);transition:box-shadow .3s,border-color .3s}
+.item.hot{border-color:var(--gold);background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,#ffd84d,#f2a516) border-box;border:2px solid transparent}
+.item.flash{box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 40%,transparent)}
+.i1{display:grid;grid-template-columns:58px minmax(0,1fr) 40px 40px;gap:8px;align-items:center}
+.thumbbtn{position:relative;width:58px;height:58px;border-radius:14px;border:1px solid var(--line);background:var(--surface2);padding:5px;font-size:34px}
+.thumbbtn .th{width:100%;height:100%}
+.thumbbtn::after{content:"✎";position:absolute;right:-5px;bottom:-5px;width:22px;height:22px;border-radius:50%;background:var(--surface);border:1px solid var(--line2);font-size:11px;display:grid;place-items:center;color:var(--mut)}
+.nm{display:grid;gap:3px;min-width:0}
+.nm .name{min-height:38px;font-weight:800;font-size:16px;border-color:transparent;background:transparent;padding:6px 8px;margin-left:-4px}
+.nm .note{min-height:30px;font-size:13px;border-color:transparent;background:transparent;padding:4px 8px;margin-left:-4px;color:var(--mut)}
+.nm .name:hover,.nm .note:hover{border-color:var(--line)}
+.nm .name:focus,.nm .note:focus{border-color:var(--acc);background:var(--surface2)}
+.ib{width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:var(--surface2);color:var(--mut);font-size:18px;display:grid;place-items:center;padding:0}
+.ib.star.on{background:var(--gold-soft);border-color:var(--gold);color:#c78a00}
+.i2{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}
+.fld{display:grid;gap:4px;min-width:0}
+.fld>span{font-size:11px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;padding-left:2px}
+.step{display:grid;grid-template-columns:34px 1fr 34px;align-items:center;border:1px solid var(--line2);border-radius:12px;background:var(--surface2);height:44px;overflow:hidden}
+.step button{height:100%;border:0;background:transparent;font-size:19px;color:var(--mut);padding:0}
+.step input{border:0;background:transparent;text-align:center;font-weight:900;font-size:16px;width:100%;min-width:0;outline:none;padding:0}
+.step:focus-within,.money:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+.money{display:flex;align-items:center;gap:6px;border:1px solid var(--line2);border-radius:12px;background:var(--surface2);height:44px;padding:0 10px}
+.money input{border:0;background:transparent;font-weight:900;font-size:16px;width:100%;min-width:0;outline:none;padding:0}
+.money .coin{font-size:17px}
+.tagin{height:44px}
+.totv{height:44px;display:flex;align-items:center;gap:6px;padding:0 4px;font-weight:900;font-size:16px;color:var(--acc);white-space:nowrap;overflow:hidden}
+.totv.zero{color:var(--mut);font-weight:700}
+.haveitem .i1{grid-template-columns:58px minmax(0,1fr) 96px 40px}
+.haveitem .step{height:40px}
+
+/* ---------- style panel ---------- */
+.themes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.theme{border:2px solid transparent;border-radius:14px;padding:6px;background:var(--surface2);display:grid;gap:6px;font-weight:800;font-size:13px;text-align:center}
+.theme.on{border-color:var(--ink)}
+.theme i{display:block;height:44px;border-radius:10px;position:relative;overflow:hidden}
+.theme i::after{content:"";position:absolute;left:10px;right:10px;bottom:8px;height:12px;border-radius:6px;background:var(--a)}
+.layouts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lay{border:2px solid var(--line);border-radius:14px;background:var(--surface2);padding:10px 6px 8px;display:grid;justify-items:center;gap:6px;font-weight:800;font-size:13px}
+.lay.on{border-color:var(--acc);background:var(--acc-soft)}
+.lay svg{width:46px;height:34px;color:var(--mut)}
+.lay.on svg{color:var(--acc)}
+.emo{display:grid;grid-template-columns:58px 1fr;gap:10px;align-items:center}
+
+/* ---------- images panel ---------- */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 12px}
+.stat{background:var(--surface2);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font:400 22px 'Lilita One',Nunito,sans-serif}
+.stat span{font-size:11px;color:var(--mut);font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+.matches{display:grid;gap:8px;margin-top:10px}
+.match{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px}
+.match img{width:48px;height:48px;object-fit:contain;border-radius:8px;background:var(--surface2)}
+.match .fn{font-size:12px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.custom{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px}
+.custom .th{width:52px;height:52px;font-size:30px;background:var(--surface2);border-radius:10px}
+.steps{margin:6px 0 0;padding-left:20px;color:var(--mut);font-size:13px}
+.steps li{margin:3px 0}
+code{background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:1px 5px;font-size:12px}
+
+/* ---------- preview ---------- */
+.pv-wrap{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:12px;box-shadow:var(--sh)}
+#cv{display:block;width:100%;height:auto;border-radius:14px;background:var(--surface2)}
+.pv-actions{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-top:12px}
+.pv-meta{display:flex;justify-content:space-between;color:var(--mut);font-size:12px;font-weight:800;margin:10px 4px 0}
+
+/* ---------- tab bar ---------- */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;gap:4px;padding:8px 10px calc(8px + var(--safe-b));background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line)}
+.tabbar button{flex:1;min-height:48px;border:0;border-radius:12px;background:transparent;color:var(--mut);font-weight:800;font-size:11.5px;display:grid;place-items:center;gap:1px;padding:4px 2px}
+.tabbar button i{font-style:normal;font-size:19px;line-height:1}
+.tabbar button.on{color:var(--ink);background:var(--surface2)}
+.tabbar .dl{flex:1.25;background:var(--acc);color:var(--acc-ink);font-size:13px}
+.tabbar .dl.on,.tabbar .dl:active{background:var(--acc);color:var(--acc-ink)}
+#mini{position:fixed;right:10px;bottom:calc(var(--tab-h) + var(--safe-b) + 14px);z-index:35;width:64px;border:2px solid var(--surface);border-radius:12px;padding:0;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.25);background:var(--surface)}
+#mini canvas{display:block;width:100%;height:auto}
+#mini span{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:900;padding:2px 0;text-align:center}
+body[data-tab=prev] #mini{display:none}
+
+/* ---------- sheet ---------- */
+.scrim{position:fixed;inset:0;z-index:60;background:rgba(15,12,8,.45);opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:61;max-height:88vh;display:flex;flex-direction:column;background:var(--surface);border-radius:22px 22px 0 0;transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);padding-bottom:var(--safe-b);box-shadow:0 -10px 40px rgba(0,0,0,.2)}
+.sheet.open{transform:none}
+@media (min-width:700px){.sheet{left:50%;right:auto;width:640px;bottom:auto;top:50%;transform:translate(-50%,-46%) scale(.98);opacity:0;pointer-events:none;border-radius:22px;max-height:84vh;transition:transform .2s,opacity .2s}.sheet.open{transform:translate(-50%,-50%);opacity:1;pointer-events:auto}}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.sheet-h h3{flex:1;margin:0;font:400 19px 'Lilita One',Nunito,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet-b{overflow:auto;padding:14px 16px 18px;display:grid;gap:14px;-webkit-overflow-scrolling:touch}
+.bigprev{display:flex;align-items:center;gap:14px;padding:10px;border-radius:16px;background:var(--surface2)}
+.bigprev .th{width:84px;height:84px;font-size:52px;background:var(--surface);border-radius:14px;flex:none}
+.bigprev b{display:block;font-size:16px}
+.bigprev small{color:var(--mut);font-size:12px}
+.menu{display:grid;gap:6px}
+.menu button{display:flex;align-items:center;gap:12px;min-height:50px;border:1px solid var(--line);border-radius:14px;background:var(--surface2);padding:0 14px;font-weight:800;text-align:left}
+.menu button i{font-style:normal;width:24px;text-align:center;font-size:18px}
+.menu button.danger{color:var(--danger)}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+#toast{position:fixed;left:50%;bottom:calc(var(--tab-h) + var(--safe-b) + 18px);transform:translate(-50%,20px);z-index:80;background:#1d1b18;color:#fff;padding:10px 16px;border-radius:14px;font-weight:800;font-size:14px;max-width:92vw;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 10px 30px rgba(0,0,0,.3);text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (min-width:980px){#toast{bottom:28px}}
+</style>
+</head>
+<body data-tab="items">
+<header class="top">
+  <div class="brand">
+    <div class="logo">🌾</div>
+    <div><h1>Studio d’annonces</h1><small>Hay Day · Discord</small></div>
+    <div class="sp"></div>
+  </div>
+  <div class="profiles" id="profiles"></div>
+</header>
+
+<main class="app">
+  <nav class="tabbar" id="tabbar">
+      <button data-t="items"><i>🧺</i>Articles</button>
+      <button data-t="style"><i>🎨</i>Style</button>
+      <button data-t="images"><i>🖼️</i>Images</button>
+      <button data-t="prev"><i>👁️</i>Aperçu</button>
+      <button class="dl" id="dlTab"><i>⬇</i>PNG</button>
+    </nav>
+  <div id="editor">
+
+    <!-- ===== ARTICLES ===== -->
+    <section class="panel" id="p-items">
+      <div class="card">
+        <div class="sbox" id="sbox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="inp" id="q" type="search" placeholder="Rechercher un produit (FR ou EN)…" autocomplete="off" enterkeyhint="done">
+          <button class="clr" id="qclr" aria-label="Effacer">✕</button>
+        </div>
+        <div class="chips" id="cats"></div>
+        <div class="target" id="target"><span class="lbl">Ajouter à</span><div class="seg"><button data-to="wants">Je cherche</button><button data-to="have">J’ai</button></div></div>
+        <div class="grid" id="results"></div>
+        <button class="btn sm ghost more full" id="moreRes" hidden>Afficher plus</button>
+        <button class="btn dashed" id="freeAdd" style="margin-top:10px">＋ Article libre (hors bibliothèque)</button>
+      </div>
+
+      <div class="card summary" id="summary"></div>
+
+      <div id="haveBox" class="stack">
+        <div class="sec-h"><h3 id="haveH">J’ai</h3><span id="haveN"></span></div>
+        <div class="list" id="haveList"></div>
+      </div>
+      <div class="stack">
+        <div class="sec-h"><h3 id="wantH">Je cherche</h3><span id="wantN"></span></div>
+        <div class="list" id="wantList"></div>
+      </div>
+    </section>
+
+    <!-- ===== STYLE ===== -->
+    <section class="panel" id="p-style">
+      <div class="card fieldset">
+        <h2>Profil</h2>
+        <div><label class="lbl">Nom du profil</label><input class="inp" data-k="name"></div>
+        <div><label class="lbl">Type d’annonce</label><div class="seg" id="typeSeg"><button data-y="trade">🔁 Échange</button><button data-y="vente">🏷️ Vente</button><button data-y="achat">🛒 Achat</button></div></div>
+        <div class="two"><button class="btn" id="dupP">⧉ Dupliquer</button><button class="btn danger" id="delP">Supprimer</button></div>
+      </div>
+      <div class="card fieldset">
+        <h2>Thème</h2>
+        <div class="themes" id="themes"></div>
+      </div>
+      <div class="card fieldset">
+        <h2>Mise en page</h2>
+        <div class="layouts" id="layouts"></div>
+        <div><label class="lbl">Ordre des articles</label><div class="seg" id="sortSeg"><button data-s="manual">Manuel</button><button data-s="qty">Quantité</button><button data-s="price">Prix</button><button data-s="name">A→Z</button></div></div>
+        <div><label class="lbl">Langue des libellés de l’image</label><div class="seg" id="langSeg"><button data-l="en">English</button><button data-l="fr">Français</button></div></div>
+        <label class="switch">Afficher les totaux<input type="checkbox" id="showTot"></label>
+      </div>
+      <div class="card fieldset">
+        <h2>Textes de l’image</h2>
+        <div class="two">
+          <div><label class="lbl">Petit titre</label><input class="inp" data-k="kicker"></div>
+          <div><label class="lbl">Pseudo</label><input class="inp" data-k="user"></div>
+        </div>
+        <div><label class="lbl">Grand titre</label><input class="inp" data-k="title"></div>
+        <div class="two" id="haveTitleBox">
+          <div><label class="lbl">Titre « J’ai »</label><input class="inp" data-k="haveTitle"></div>
+          <div><label class="lbl">Titre « Je cherche »</label><input class="inp" data-k="wantTitle"></div>
+        </div>
+        <div><label class="lbl">Bandeau d’appel (bas)</label>
+          <div class="emo"><button class="thumbbtn" id="ctaIcon" aria-label="Icône du bandeau"></button><input class="inp" data-k="cta"></div></div>
+        <div><label class="lbl">Petite ligne finale</label><input class="inp" data-k="sub"></div>
+      </div>
+      <div class="card fieldset">
+        <h2>Sauvegarde</h2>
+        <p class="hint" style="margin:0">Tout est enregistré automatiquement sur cet appareil. Exporte un fichier de temps en temps pour changer d’appareil ou de navigateur (images personnalisées incluses).</p>
+        <div class="two"><button class="btn" id="bkOut">⬆ Exporter</button><label class="btn filebtn">⬇ Importer<input type="file" id="bkIn" accept=".json,application/json"></label></div>
+        <button class="btn dashed" id="resetP">Réinitialiser ce profil</button>
+      </div>
+    </section>
+
+    <!-- ===== IMAGES ===== -->
+    <section class="panel" id="p-images">
+      <div class="card">
+        <h2>Images des produits</h2>
+        <p class="hint">Les images officielles sont chargées automatiquement depuis le wiki Hay Day. Tu peux remplacer n’importe laquelle par la tienne : touche un produit.</p>
+        <div class="stats"><div class="stat"><b id="stAll">–</b><span>Produits</span></div><div class="stat"><b id="stOk">–</b><span>Images OK</span></div><div class="stat"><b id="stMiss">–</b><span>Sans image</span></div></div>
+        <div class="bar" id="chkBar" hidden><i></i></div>
+        <button class="btn full" id="chkAll">🔍 Vérifier toutes les images</button>
+        <div class="chips" id="imgFilter" style="margin-top:12px"></div>
+        <div class="sbox" style="margin-top:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="inp" id="iq" type="search" placeholder="Filtrer…" autocomplete="off"></div>
+        <div class="grid" id="imgGrid"></div>
+        <button class="btn sm ghost more full" id="moreImg" hidden>Afficher plus</button>
+      </div>
+
+      <div class="card">
+        <h2>Associer des images en masse</h2>
+        <p class="hint">Sélectionne plusieurs images d’un coup : elles sont reliées automatiquement aux produits d’après le nom du fichier (ex. <code>bolt.png</code>, <code>Duct Tape.png</code>, <code>boulon.jpg</code>). Tu peux corriger chaque association avant de valider.</p>
+        <label class="btn pri full filebtn">🖼️ Choisir des images<input type="file" id="bulkIn" accept="image/*" multiple></label>
+        <div class="matches" id="bulkList"></div>
+        <button class="btn pri full" id="bulkOk" hidden style="margin-top:10px">Valider les associations</button>
+      </div>
+
+      <div class="card">
+        <h2>Mes produits personnalisés</h2>
+        <p class="hint">Ajoute un article qui n’est pas dans la bibliothèque (événement, objet temporaire…) avec son image. Il apparaîtra dans la recherche.</p>
+        <div class="fieldset">
+          <div class="emo"><button class="thumbbtn" id="cuImgBtn" aria-label="Image"></button>
+            <div class="stack" style="gap:8px"><input class="inp" id="cuEn" placeholder="Nom affiché (ex. Golden Egg)" maxlength="50"><input class="inp" id="cuFr" placeholder="Nom FR / mots-clés (facultatif)" maxlength="60"></div></div>
+          <input type="file" id="cuFile" accept="image/*" hidden>
+          <button class="btn pri" id="cuAdd">＋ Ajouter à la bibliothèque</button>
+        </div>
+        <div class="stack" id="cuList" style="margin-top:12px"></div>
+      </div>
+
+      <div class="card">
+        <h2>Héberger les images sur ton GitHub</h2>
+        <p class="hint">Facultatif : les images s’affichent déjà automatiquement. Ceci les copie dans ton dépôt pour ne plus dépendre du wiki — en un seul toucher, même depuis l’iPhone.</p>
+        <div class="fieldset">
+          <div class="two">
+            <div><label class="lbl">Dépôt</label><input class="inp" id="ghRepo" placeholder="pseudo/nom-du-depot" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+            <div><label class="lbl">Branche</label><input class="inp" id="ghBranch" value="main" autocapitalize="off" spellcheck="false"></div>
+          </div>
+          <div><label class="lbl">Jeton GitHub (accès « Contents : Read and write »)</label><input class="inp" id="ghToken" type="password" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+          <label class="switch" style="font-size:13px">Mémoriser le jeton sur cet appareil<input type="checkbox" id="ghRemember"></label>
+        </div>
+        <div class="bar" id="zipBar" hidden><i></i></div>
+        <p class="hint" id="ghStatus" style="margin:6px 0 0"></p>
+        <button class="btn pri full" id="ghBtn" style="margin-top:8px">🚀 Envoyer toutes les images sur mon GitHub</button>
+        <details style="margin-top:10px"><summary class="hint" style="cursor:pointer;margin:0">Comment obtenir le jeton (2 min, une seule fois)</summary>
+        <ol class="steps">
+          <li>Sur GitHub : photo de profil → <b>Settings</b> → <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
+          <li><b>Repository access</b> : « Only select repositories » → ton dépôt du site.</li>
+          <li><b>Permissions</b> → <b>Contents</b> : « Read and write ». Génère, copie le jeton et colle-le ici.</li>
+        </ol></details>
+        <button class="btn sm ghost full" id="zipBtn" style="margin-top:6px">ou télécharger le pack en ZIP</button>
+        <p class="hint" id="localInfo" style="margin:8px 0 0"></p>
+      </div>
+    </section>
+  </div>
+
+  <aside id="preview">
+    <div class="pv-wrap">
+      <canvas id="cv" width="1080" height="1600"></canvas>
+      <div class="pv-meta"><span id="pvSize"></span><span id="pvCount"></span></div>
+      <div class="pv-actions">
+        <button class="btn pri" id="dl">⬇ Télécharger</button>
+        <button class="btn" id="share">↗ Partager</button>
+        <button class="btn" id="copy">⧉ Copier</button>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<button id="mini" aria-label="Voir l’aperçu"><canvas id="miniCv" width="156" height="230"></canvas><span>APERÇU</span></button>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="sheet-h"><h3 id="sheetT"></h3><button class="ib" id="sheetX" aria-label="Fermer">✕</button></div><div class="sheet-b" id="sheetB"></div></div>
+<div id="toast" role="status"></div>
+<script>
+/* =====================================================================
+   CATALOGUE — produits Hay Day
+   Format : catégorie | Nom anglais (nom du jeu) | Nom français ~ mots-clés | emoji de secours | [fichier wiki]
+   Le fichier wiki est déduit du nom anglais (ex. « Duct Tape » → Duct_Tape.png).
+   La liste est complétée automatiquement au chargement par celle du wiki.
+   ===================================================================== */
+const CATS = [
+  {id:"pop",    fr:"⭐ Populaires"},
+  {id:"recent", fr:"🕘 Récents"},
+  {id:"all",    fr:"Tous"},
+  {id:"packs",  fr:"Lots d’extension"},
+  {id:"ext",    fr:"Matériaux & outils"},
+  {id:"crops",  fr:"Cultures"},
+  {id:"trees",  fr:"Arbres & buissons"},
+  {id:"animal", fr:"Produits animaux"},
+  {id:"bakery", fr:"Boulangerie"},
+  {id:"dairy",  fr:"Laiterie & sucre"},
+  {id:"snack",  fr:"Barbecue & plats"},
+  {id:"pies",   fr:"Tartes & gâteaux"},
+  {id:"sweets", fr:"Confiserie & glaces"},
+  {id:"drinks", fr:"Jus & boissons"},
+  {id:"jams",   fr:"Confitures & sauces"},
+  {id:"textile",fr:"Textile"},
+  {id:"mine",   fr:"Mine & bijoux"},
+  {id:"fish",   fr:"Pêche"},
+  {id:"feed",   fr:"Nourriture animaux"},
+  {id:"other",  fr:"Autres (wiki)"},
+  {id:"perso",  fr:"Mes produits"}
+];
+
+const CATALOG_SRC = `
+ext|Bolt|Boulon|🔩
+ext|Plank|Planche|🪵
+ext|Duct Tape|Ruban adhésif ~ scotch|🩹
+ext|Nail|Clou|📌
+ext|Screw|Vis|🔧
+ext|Wood Panel|Panneau de bois|🪚
+ext|Land Deed|Titre de propriété ~ acte|📜
+ext|Mallet|Maillet|🔨
+ext|Marker Stake|Piquet de bornage|🚩
+ext|Map Piece|Morceau de carte|🗺️
+ext|Brick|Brique|🧱
+ext|Hammer|Marteau|🔨
+ext|Hand Drill|Perceuse ~ chignole|🪛
+ext|Paint Bucket|Pot de peinture|🪣
+ext|Stone Block|Bloc de pierre|🪨
+ext|Tar Bucket|Seau de goudron|🛢️
+ext|Axe|Hache|🪓
+ext|Saw|Scie|🪚
+ext|Shovel|Pelle|🪏
+ext|Pickaxe|Pioche|⛏️
+ext|Dynamite|Dynamite|🧨
+ext|TNT Barrel|Baril de TNT|💥|TNT_Barrel
+crops|Wheat|Blé|🌾
+crops|Corn|Maïs|🌽
+crops|Carrot|Carotte|🥕
+crops|Soybean|Soja|🫘
+crops|Sugarcane|Canne à sucre|🎋
+crops|Indigo|Indigo|🪻
+crops|Pumpkin|Citrouille ~ potiron|🎃
+crops|Cotton|Coton|☁️
+crops|Chili Pepper|Piment|🌶️
+crops|Tomato|Tomate|🍅
+crops|Strawberry|Fraise|🍓
+crops|Potato|Pomme de terre ~ patate|🥔
+crops|Rice|Riz|🍚
+crops|Lily|Lys|🌸
+crops|Cabbage|Chou|🥬
+crops|Garlic|Ail|🧄
+crops|Onion|Oignon|🧅
+crops|Sunflower|Tournesol|🌻
+crops|Bell Pepper|Poivron|🫑
+crops|Cucumber|Concombre|🥒
+crops|Beetroot|Betterave|🟣
+crops|Lettuce|Laitue ~ salade|🥬
+crops|Tea Leaf|Feuille de thé|🍃
+crops|Broccoli|Brocoli|🥦
+crops|Mint|Menthe|🌿
+crops|Ginger|Gingembre|🫚
+crops|Peony|Pivoine|🌺
+crops|Pineapple|Ananas|🍍
+crops|Watermelon|Pastèque|🍉
+crops|Eggplant|Aubergine|🍆
+crops|Asparagus|Asperge|🌱
+crops|Chickpea|Pois chiche|🫛
+crops|Grapes|Raisin|🍇
+crops|Mushroom|Champignon|🍄
+trees|Apple|Pomme|🍎
+trees|Raspberry|Framboise|🍓
+trees|Cherry|Cerise|🍒
+trees|Blackberry|Mûre|🫐
+trees|Cacao|Cacao|🍫
+trees|Coffee Bean|Grain de café|☕
+trees|Olive|Olive|🫒
+trees|Lemon|Citron|🍋
+trees|Orange|Orange|🍊
+trees|Peach|Pêche|🍑
+trees|Banana|Banane|🍌
+trees|Plum|Prune|🟣
+trees|Mango|Mangue|🥭
+trees|Coconut|Noix de coco|🥥
+trees|Guava|Goyave|🍐
+trees|Pomegranate|Grenade|🔴
+trees|Passion Fruit|Fruit de la passion|🟡
+animal|Egg|Œuf ~ oeuf|🥚
+animal|Milk|Lait|🥛
+animal|Bacon|Bacon ~ lard|🥓
+animal|Wool|Laine|🧶
+animal|Goat Milk|Lait de chèvre|🍼
+animal|Honeycomb|Rayon de miel|🍯
+animal|Duck Feather|Plume de canard ~ plumes feathers|🪶
+feed|Chicken Feed|Nourriture pour poules|🌾
+feed|Cow Feed|Nourriture pour vaches|🌾
+feed|Pig Feed|Nourriture pour cochons|🌾
+feed|Sheep Feed|Nourriture pour moutons|🌾
+feed|Goat Feed|Nourriture pour chèvres|🌾
+bakery|Bread|Pain|🍞
+bakery|Corn Bread|Pain de maïs|🌽
+bakery|Cookie|Cookie ~ biscuit|🍪
+bakery|Raspberry Muffin|Muffin à la framboise|🧁
+bakery|Blackberry Muffin|Muffin aux mûres|🧁
+bakery|Pizza|Pizza|🍕
+bakery|Spicy Pizza|Pizza épicée|🍕
+bakery|Potato Bread|Pain aux pommes de terre|🍞
+bakery|Garlic Bread|Pain à l’ail|🥖
+dairy|Cream|Crème|🥛
+dairy|Butter|Beurre|🧈
+dairy|Cheese|Fromage|🧀
+dairy|Goat Cheese|Fromage de chèvre|🧀
+dairy|Brown Sugar|Sucre roux|🟤
+dairy|White Sugar|Sucre blanc|⬜
+dairy|Syrup|Sirop|🍯
+snack|Popcorn|Pop-corn|🍿
+snack|Buttered Popcorn|Pop-corn au beurre|🍿
+snack|Chili Popcorn|Pop-corn pimenté|🍿
+snack|Pancake|Pancake ~ crêpe|🥞
+snack|Bacon and Eggs|Œufs au bacon|🍳|Bacon_and_Eggs
+snack|Hamburger|Hamburger ~ burger|🍔
+snack|Fish Burger|Burger de poisson|🍔
+snack|Baked Potato|Pomme de terre au four|🥔
+snack|Fish and Chips|Fish and chips ~ frites|🍟|Fish_and_Chips
+snack|Sushi Roll|Sushi ~ maki|🍣
+snack|Tomato Soup|Soupe de tomate|🥣
+snack|Pumpkin Soup|Soupe de citrouille|🥣
+snack|BLT Salad|Salade BLT|🥗|BLT_Salad
+pies|Carrot Pie|Tarte aux carottes|🥧
+pies|Pumpkin Pie|Tarte à la citrouille|🥧
+pies|Bacon Pie|Tourte au bacon|🥧
+pies|Apple Pie|Tarte aux pommes|🥧
+pies|Fish Pie|Tourte au poisson|🥧
+pies|Feta Pie|Tourte à la feta|🥧
+pies|Shepherd's Pie|Hachis parmentier|🥧|Shepherds_Pie
+pies|Carrot Cake|Gâteau aux carottes|🍰
+pies|Cream Cake|Gâteau à la crème|🎂
+pies|Red Berry Cake|Gâteau aux fruits rouges|🍰
+pies|Cheesecake|Cheesecake|🍰
+pies|Strawberry Cake|Gâteau aux fraises|🍰
+pies|Chocolate Cake|Gâteau au chocolat|🍫
+pies|Potato Feta Cake|Gâteau pommes de terre feta|🍰
+sweets|Chocolate|Chocolat|🍫
+sweets|Caramel Apple|Pomme d’amour ~ caramel|🍎
+sweets|Toffee|Caramel ~ toffee|🍬
+sweets|Lollipop|Sucette|🍭
+sweets|Jelly Beans|Bonbons ~ dragées|🍬
+sweets|Vanilla Ice Cream|Glace à la vanille|🍦
+sweets|Cherry Popsicle|Glace à l’eau à la cerise|🍧
+sweets|Strawberry Ice Cream|Glace à la fraise|🍨
+sweets|Chocolate Ice Cream|Glace au chocolat|🍨
+drinks|Carrot Juice|Jus de carotte|🥕
+drinks|Apple Juice|Jus de pomme|🧃
+drinks|Cherry Juice|Jus de cerise|🧃
+drinks|Tomato Juice|Jus de tomate|🧃
+drinks|Berry Juice|Jus de baies|🧃
+drinks|Espresso|Expresso ~ café|☕
+drinks|Caffè Latte|Café latte|☕|Caffe_Latte
+drinks|Caffè Mocha|Café moka|☕|Caffe_Mocha
+drinks|Raspberry Mocha|Moka à la framboise|☕
+drinks|Hot Chocolate|Chocolat chaud|☕
+drinks|Green Smoothie|Smoothie vert|🥤
+drinks|Yogurt Smoothie|Smoothie au yaourt|🥤
+jams|Apple Jam|Confiture de pommes|🍎
+jams|Raspberry Jam|Confiture de framboises|🫙
+jams|Blackberry Jam|Confiture de mûres|🫙
+jams|Cherry Jam|Confiture de cerises|🫙
+jams|Strawberry Jam|Confiture de fraises ~ jams|🍓
+jams|Peach Jam|Confiture de pêches|🍑
+jams|Grape Jam|Confiture de raisin|🍇
+jams|Marmalade|Marmelade|🍊
+jams|Lemon Curd|Crème au citron ~ curd|🍋
+jams|Olive Oil|Huile d’olive|🫒
+jams|Soy Sauce|Sauce soja|🍶
+jams|Mayonnaise|Mayonnaise ~ mayo|🥫
+jams|Tomato Sauce|Sauce tomate|🍅
+jams|Honey|Miel|🍯
+jams|Beeswax|Cire d’abeille|🕯️
+textile|Cotton Fabric|Tissu en coton|🧵
+textile|Sweater|Pull|🧥
+textile|Blue Woolly Hat|Bonnet bleu|🧢
+textile|Blue Sweater|Pull bleu|🧥
+textile|Cotton Shirt|Chemise en coton|👕
+textile|Wooly Chaps|Jambières en laine|👖
+textile|Violet Dress|Robe violette|👗
+textile|Blanket|Couverture ~ blankets|🛏️
+mine|Coal|Charbon|⚫
+mine|Iron Ore|Minerai de fer|🪨
+mine|Silver Ore|Minerai d’argent|⚪
+mine|Gold Ore|Minerai d’or|🟡
+mine|Platinum Ore|Minerai de platine|⚪
+mine|Refined Coal|Charbon raffiné|⚫
+mine|Iron Bar|Lingot de fer|🧱
+mine|Silver Bar|Lingot d’argent|🥈
+mine|Gold Bar|Lingot d’or|🥇
+mine|Platinum Bar|Lingot de platine|🏅
+mine|Diamond Ring|Bague en diamant ~ ring|💍
+mine|Iron Bracelet|Bracelet en fer|📿
+fish|Fish Fillet|Filet de poisson|🐟
+fish|Lobster Tail|Queue de homard ~ lobster|🦞
+fish|Red Lure|Leurre rouge|🎣
+fish|Green Lure|Leurre vert|🎣
+fish|Blue Lure|Leurre bleu|🎣
+fish|Purple Lure|Leurre violet|🎣
+fish|Gold Lure|Leurre doré|🎣
+fish|Fishing Net|Filet de pêche|🕸️
+fish|Mystery Net|Filet mystère|🕸️
+fish|Lobster Trap|Casier à homard|🪤
+fish|Duck Trap|Piège à canard|🪤
+`;
+
+// Lots d’extension composés à partir des images des matériaux.
+const PACKS = [
+  {en:"BEM Set", fr:"Lot grange · Bolt Plank Duct Tape · barn expansion", parts:["bolt","plank","duct-tape"], e:"🏚️"},
+  {en:"SEM Set", fr:"Lot silo · Nail Screw Wood Panel · silo expansion", parts:["nail","screw","wood-panel"], e:"🏗️"},
+  {en:"LEM Set", fr:"Lot terrain · Land Deed Mallet Marker Stake · land expansion", parts:["land-deed","mallet","marker-stake"], e:"🗺️"},
+  {en:"TEM Set", fr:"Lot ville · Brick Stone Block Tar Bucket · town expansion", parts:["brick","stone-block","tar-bucket"], e:"🏘️"},
+  {en:"Tool Set", fr:"Lot outils · Axe Saw Shovel · déblayage", parts:["axe","saw","shovel"], e:"🧰"}
+];
+
+// Raccourcis de recherche / migration des anciens noms
+const ALIASES = {
+  "feathers":"duck-feather","feather":"duck-feather","plume":"duck-feather","plumes":"duck-feather",
+  "lobster":"lobster-tail","lobsters":"lobster-tail","homard":"lobster-tail",
+  "ring":"diamond-ring","rings":"diamond-ring","bague":"diamond-ring",
+  "dt":"duct-tape","tape":"duct-tape","tnt":"tnt-barrel","map":"map-piece",
+  "bem":"bem-set","sem":"sem-set","lem":"lem-set","tem":"tem-set",
+  "jams":"strawberry-jam","mayo":"mayonnaise","malet":"mallet"
+};
+
+const POPULAR = ["bem-set","sem-set","lem-set","tem-set","bolt","plank","duct-tape","nail","screw","wood-panel","land-deed","mallet","marker-stake","axe","saw","shovel","dynamite","tnt-barrel","pickaxe","map-piece","diamond-ring","lobster-tail","duck-feather","blanket","lemon-curd","mayonnaise","soy-sauce","tomato-sauce","olive-oil","strawberry-jam","honey","beeswax"];
+
+// Noms de fichiers wiki particuliers (sinon : Title_Snake_Case du nom anglais)
+const WIKI_BLACKLIST = new Set(["Field","Apple Tree","Shop Icon","Coins","Coin","Experience","Honey Mask","Caffè Latte","Caffè Mocha","Diamond","Diamonds","Voucher"]);
+
+"use strict";
+/* =====================================================================
+   1. OUTILS
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  if (props) for (const k in props) {
+    const v = props[k];
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v;
+    else if (k === "style") e.style.cssText = v;
+    else if (k.startsWith("on")) e[k] = v;
+    else if (k in e && k !== "list") e[k] = v;
+    else e.setAttribute(k, v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) e.append(c.nodeType ? c : String(c));
+  return e;
+}
+const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[’']/g, "").trim();
+const slug = s => norm(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const clone = o => JSON.parse(JSON.stringify(o));
+/** Nombre saisi : accepte « 1 500 », « 1,5k », « 12k », « 2m ». */
+function num(v) {
+  const s = String(v ?? "").toLowerCase().replace(/[\s  ]/g, "").replace(",", ".");
+  if (!s) return 0;
+  const m = s.match(/^(\d*\.?\d+)(k|m)?$/);
+  if (m) return parseFloat(m[1]) * (m[2] === "k" ? 1e3 : m[2] === "m" ? 1e6 : 1);
+  const f = parseFloat(s);
+  return isFinite(f) ? f : 0;
+}
+const fmt = n => Math.round(n).toLocaleString("fr-FR").replace(/[  ]/g, " ");
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+};
+let toastT = 0;
+function toast(t) { const m = $("#toast"); m.textContent = t; m.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => m.classList.remove("show"), 2600); }
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+/* ---------- IndexedDB (images personnalisées) ---------- */
+const IDB = {
+  db: null,
+  open() {
+    return new Promise(res => {
+      try {
+        const r = indexedDB.open("hd-studio", 1);
+        r.onupgradeneeded = () => r.result.createObjectStore("img");
+        r.onsuccess = () => { this.db = r.result; res(); };
+        r.onerror = () => res();
+      } catch (e) { res(); }
+    });
+  },
+  tx(mode) { return this.db.transaction("img", mode).objectStore("img"); },
+  all() {
+    return new Promise(res => {
+      if (!this.db) return res(new Map());
+      const out = new Map(), r = this.tx("readonly").openCursor();
+      r.onsuccess = () => { const c = r.result; if (c) { out.set(c.key, c.value); c.continue(); } else res(out); };
+      r.onerror = () => res(out);
+    });
+  },
+  put(k, v) { if (this.db) try { this.tx("readwrite").put(v, k); } catch (e) {} else store.set("hd5_img_" + k, v); },
+  del(k) { if (this.db) try { this.tx("readwrite").delete(k); } catch (e) {} }
+};
+let USERIMG = new Map(); // "ov:<id>" remplacement d’un produit · "c:<id>" produit perso · "u:<id>" image d’un article
+
+/* =====================================================================
+   2. CATALOGUE
+   ===================================================================== */
+const SPECIAL_FILE = { "Tnt_Barrel": "TNT_Barrel", "Blt_Salad": "BLT_Salad", "Bacon_And_Eggs": "Bacon_and_Eggs", "Fish_And_Chips": "Fish_and_Chips", "Peanut_Butter_And_Jelly_Sandwich": "Peanut_Butter_and_Jelly_Sandwich", "Frutti_Di_Mare_Pizza": "Frutti_di_Mare_Pizza" };
+const titleSnake = s => { const t = s.trim().split(/[\s_]+/).map(w => w[0].toUpperCase() + w.slice(1).toLowerCase()).join("_"); return SPECIAL_FILE[t] || t; };
+const CAT = { list: [], byId: {} };
+function addProduct(p) {
+  if (CAT.byId[p.id]) return CAT.byId[p.id];
+  p.k = norm(p.en + " " + (p.fr || "").replace(/[~·]/g, " ") + " " + p.id.replace(/-/g, " "));
+  CAT.list.push(p); CAT.byId[p.id] = p; return p;
+}
+function buildCatalog() {
+  CAT.list = []; CAT.byId = {};
+  PACKS.forEach(p => addProduct({ id: slug(p.en), en: p.en, fr: p.fr, e: p.e, cat: "packs", parts: p.parts }));
+  CATALOG_SRC.trim().split("\n").forEach(line => {
+    const [cat, en, fr, e, file] = line.split("|").map(s => s && s.trim());
+    if (!en) return;
+    addProduct({ id: slug(en), en, fr, e: e || "📦", cat, file: file || titleSnake(en) });
+  });
+  (store.get("hd5_wiki", { names: [] }).names || []).forEach(addWikiName);
+  CUSTOM.forEach(c => addProduct({ id: c.id, en: c.en, fr: c.fr || "", e: c.e || "⭐", cat: "perso", custom: true }));
+}
+function addWikiName(n) {
+  if (!n || WIKI_BLACKLIST.has(n) || /\b(tree|bush|icon|field|coins?|experience|voucher|level|building|machine)\b/i.test(n)) return;
+  const id = slug(n);
+  if (CAT.byId[id]) return;
+  addProduct({ id, en: n, fr: "", e: "📦", cat: "other", file: n.replace(/ /g, "_"), wiki: true });
+}
+/** Récupère la liste complète des produits sur le wiki (comme hd.jjtechdev.com), mise en cache 7 jours. */
+async function refreshWikiList(force) {
+  const c = store.get("hd5_wiki", { t: 0, names: [] });
+  if (!force && Date.now() - c.t < 7 * 864e5 && c.names.length) return;
+  try {
+    const pages = ["Products", "Crops", "Animal_Goods"];
+    const names = [];
+    for (const page of pages) {
+      const r = await fetch(WIKI_API + "?" + new URLSearchParams({ origin: "*", action: "parse", page, format: "json", prop: "images" }));
+      const j = await r.json();
+      (j.parse && j.parse.images || []).forEach(im => { if (/\.png$/i.test(im)) names.push(im.replace(/\.png$/i, "").replace(/_/g, " ")); });
+    }
+    if (names.length > 30) {
+      store.set("hd5_wiki", { t: Date.now(), names: [...new Set(names)] });
+      const before = CAT.list.length;
+      names.forEach(addWikiName);
+      if (CAT.list.length !== before) { renderResults(); renderImgGrid(); }
+    }
+  } catch (e) { /* hors ligne : le catalogue intégré suffit */ }
+}
+function findProduct(name) {
+  const n = norm(name).replace(/\s*\|.*$/, "");
+  if (!n) return null;
+  const s = slug(n);
+  if (CAT.byId[s]) return CAT.byId[s];
+  if (ALIASES[s]) return CAT.byId[ALIASES[s]] || null;
+  if (s.endsWith("s") && CAT.byId[s.slice(0, -1)]) return CAT.byId[s.slice(0, -1)];
+  const byFr = CAT.list.find(p => p.fr && slug(p.fr.split(/~|·/)[0]) === s);
+  if (byFr) return byFr;
+  return null;
+}
+/** Recherche tolérante : FR + EN, sans accents, début de mot prioritaire. */
+function search(q, cat) {
+  const nq = norm(q);
+  let pool = CAT.list;
+  if (!nq) {
+    if (cat === "pop") return POPULAR.map(id => CAT.byId[id]).filter(Boolean);
+    if (cat === "recent") return (SETTINGS.recent || []).map(id => CAT.byId[id]).filter(Boolean);
+    if (cat && cat !== "all") return pool.filter(p => p.cat === cat);
+    return pool;
+  }
+  if (cat && !["all", "pop", "recent"].includes(cat)) pool = pool.filter(p => p.cat === cat);
+  const toks = nq.split(/\s+/);
+  const al = ALIASES[slug(nq)];
+  const out = [];
+  for (const p of pool) {
+    let sc = 0;
+    const en = norm(p.en);
+    if (en === nq) sc = 1000;
+    else if (en.startsWith(nq)) sc = 800;
+    else if (p.id === al) sc = 900;
+    else if (toks.every(t => p.k.includes(t))) {
+      sc = 300 + (toks.every(t => new RegExp("(^|\\s)" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).test(p.k)) ? 200 : 0);
+    }
+    if (sc) out.push([sc - en.length / 100, p]);
+  }
+  if (!out.length && nq.length >= 3) for (const p of pool) { // sous-séquence (fautes de frappe légères) si rien trouvé
+    const en = norm(p.en); let i = 0; for (const ch of en) if (ch === nq[i]) i++;
+    if (i === nq.length) out.push([100 - en.length / 100, p]);
+  }
+  return out.sort((a, b) => b[0] - a[0]).map(x => x[1]);
+}
+
+/* =====================================================================
+   3. IMAGES — wiki (API compatible CORS) → secours proxy → emoji
+   ===================================================================== */
+const WIKI_API = "https://hayday.fandom.com/api.php";
+const PROXY = u => "https://wsrv.nl/?url=" + encodeURIComponent(u.replace(/^https?:\/\//, "")) + "&w=256&h=256&fit=contain&output=png";
+let URLS = store.get("hd5_urls", { t: Date.now(), m: {} });
+if (Date.now() - URLS.t > 21 * 864e5) URLS = { t: Date.now(), m: {} };
+let LOCAL = new Set();       // images présentes dans le dossier images/ du dépôt
+let API_DOWN = false;
+const IMGS = new Map();     // clé → état de chargement
+let pend = new Map(), pendT = 0;
+
+function resolveFile(file) {
+  if (file in URLS.m) return Promise.resolve(URLS.m[file]);
+  if (API_DOWN) return Promise.resolve(null);
+  return new Promise(res => {
+    if (!pend.has(file)) pend.set(file, []);
+    pend.get(file).push(res);
+    clearTimeout(pendT); pendT = setTimeout(flushResolve, 30);
+  });
+}
+async function queryFiles(files) {
+  const out = {};
+  for (let i = 0; i < files.length; i += 50) {
+    const chunk = files.slice(i, i + 50);
+    const r = await fetch(WIKI_API + "?" + new URLSearchParams({ action: "query", prop: "imageinfo", iiprop: "url", redirects: "1", format: "json", origin: "*", titles: chunk.map(f => "File:" + f + ".png").join("|") }));
+    const j = await r.json(), q = j.query || {}, map = {};
+    (q.normalized || []).forEach(n => map[n.from] = n.to);
+    (q.redirects || []).forEach(n => map[n.from] = n.to);
+    const byTitle = {};
+    Object.values(q.pages || {}).forEach(p => { byTitle[p.title] = p.imageinfo && p.imageinfo[0] && p.imageinfo[0].url ? p.imageinfo[0].url.split("/revision/")[0] : ""; });
+    chunk.forEach(f => { let t = "File:" + f + ".png"; for (let k = 0; k < 3 && map[t]; k++) t = map[t]; out[f] = byTitle[t] || ""; });
+  }
+  return out;
+}
+async function flushResolve() {
+  const batch = pend; pend = new Map();
+  const files = [...batch.keys()];
+  let res = {};
+  try {
+    res = await queryFiles(files);
+    // 2e essai avec une autre casse (ex. « Duck_feather »)
+    const miss = files.filter(f => !res[f]);
+    const alt = {};
+    miss.forEach(f => { const v = f.split("_").map((w, i) => i ? w.toLowerCase() : w).join("_"); if (v !== f) alt[v] = f; });
+    if (Object.keys(alt).length) { const r2 = await queryFiles(Object.keys(alt)); for (const v in r2) if (r2[v]) res[alt[v]] = r2[v]; }
+    files.forEach(f => URLS.m[f] = res[f] || "");
+    store.set("hd5_urls", URLS);
+  } catch (e) { API_DOWN = true; files.forEach(f => res[f] = null); }
+  batch.forEach((cbs, f) => cbs.forEach(cb => cb(res[f] === undefined ? null : res[f])));
+}
+
+function newState() { return { ok: false, fail: false, el: null, src: "", subs: new Set() }; }
+function notify(s) { scheduleDraw(); s.subs.forEach(fn => { try { fn(s); } catch (e) {} }); s.subs.clear(); updateImgStats(); }
+function loadChain(s, cands) {
+  let i = 0;
+  const next = () => {
+    if (i >= cands.length) { s.fail = true; notify(s); return; }
+    const src = cands[i++], im = new Image();
+    if (!src.startsWith("data:")) im.crossOrigin = "anonymous";
+    im.decoding = "async";
+    im.onload = () => { if (!im.naturalWidth) return next(); s.el = im; s.src = src; s.ok = true; notify(s); };
+    im.onerror = next;
+    im.src = src;
+  };
+  next();
+}
+/** État d’image d’un produit du catalogue. */
+function prodState(id) {
+  let s = IMGS.get(id);
+  if (s) return s;
+  s = newState(); IMGS.set(id, s);
+  const p = CAT.byId[id];
+  if (!p) { s.fail = true; return s; }
+  (async () => {
+    const cands = [];
+    const ov = USERIMG.get("ov:" + id); if (ov) cands.push(ov);
+    if (p.custom) { const c = USERIMG.get("c:" + id); if (c) cands.push(c); }
+    if (p.parts && !ov) return composePack(s, p);
+    if (LOCAL.has(id)) cands.push("images/" + id + ".png");
+    if (p.file) {
+      const u = await resolveFile(p.file);
+      if (u) cands.push(u, PROXY(u));
+      else if (u === null) cands.push(PROXY("hayday.fandom.com/wiki/Special:FilePath/" + encodeURIComponent(p.file) + ".png"));
+    }
+    loadChain(s, cands);
+  })();
+  return s;
+}
+/** Image d’un lot (BEM, SEM…) composée à partir des 3 matériaux. */
+function composePack(s, p) {
+  const sts = p.parts.map(prodState);
+  const done = () => {
+    if (!sts.every(x => x.ok || x.fail)) return;
+    const ok = sts.filter(x => x.ok);
+    if (!ok.length) { s.fail = true; return notify(s); }
+    const c = document.createElement("canvas"); c.width = c.height = 256;
+    const g = c.getContext("2d");
+    const spots = ok.length === 1 ? [[128, 128, 230]] : ok.length === 2 ? [[90, 120, 170], [166, 140, 170]] : [[78, 92, 150], [178, 92, 150], [128, 170, 160]];
+    ok.slice(0, 3).forEach((x, i) => { const [cx, cy, z] = spots[i], im = x.el, k = z / Math.max(im.naturalWidth, im.naturalHeight); g.drawImage(im, cx - im.naturalWidth * k / 2, cy - im.naturalHeight * k / 2, im.naturalWidth * k, im.naturalHeight * k); });
+    s.el = c; try { s.src = c.toDataURL("image/png"); } catch (e) { s.src = ""; }
+    s.ok = true; notify(s);
+  };
+  sts.forEach(x => { if (!(x.ok || x.fail)) x.subs.add(done); });
+  done();
+}
+/** État d’image d’une URL / image importée propre à un article. */
+function srcState(src) {
+  const key = "src:" + src;
+  let s = IMGS.get(key);
+  if (s) return s;
+  s = newState(); IMGS.set(key, s);
+  const c = [src]; if (/^https?:/.test(src)) c.push(PROXY(src));
+  loadChain(s, c);
+  return s;
+}
+/** Clé d’image d’un article : image propre > produit du catalogue > emoji. */
+function itemState(it) {
+  if (!it || it.img === "none") return null;
+  if (it.img) {
+    const src = it.img.startsWith("idb:") ? USERIMG.get(it.img.slice(4)) : it.img;
+    return src ? srcState(src) : null;
+  }
+  if (it.ref && CAT.byId[it.ref]) return prodState(it.ref);
+  return null;
+}
+function resetProdImage(id) {
+  IMGS.delete(id);
+  CAT.list.filter(p => p.parts && p.parts.includes(id)).forEach(p => IMGS.delete(p.id));
+}
+/** Remplit un conteneur .th avec l’image (ou l’emoji en attendant / en secours). */
+function fillThumb(el, s, emoji) {
+  el.textContent = emoji || "📦";
+  el.classList.remove("ok");
+  if (!s) return;
+  const apply = st => {
+    if (!st.ok || !st.src) return;
+    const im = new Image(); if (!st.src.startsWith("data:")) im.crossOrigin = "anonymous";
+    im.src = st.src; im.alt = ""; im.draggable = false;
+    el.textContent = ""; el.append(im); el.classList.add("ok");
+  };
+  if (s.ok) apply(s); else if (!s.fail) s.subs.add(apply);
+}
+const thumb = (s, emoji, cls) => { const d = h("span", { class: "th " + (cls || "") }); fillThumb(d, s, emoji); return d; };
+async function loadLocalManifest() {
+  try {
+    const r = await fetch("images/manifest.json", { cache: "no-cache" });
+    if (r.ok) { const j = await r.json(); LOCAL = new Set(j.ids || []); }
+  } catch (e) {}
+  $("#localInfo").textContent = LOCAL.size ? "✅ " + LOCAL.size + " images sont servies depuis ton dépôt (dossier images/)." : "Aucun dossier images/ détecté dans ton dépôt pour l’instant.";
+}
+/** Redimensionne / rogne une image importée → PNG data URL (256 px max). */
+function processFile(file) {
+  return new Promise((res, rej) => {
+    if (!file || !file.type.startsWith("image/")) return rej(new Error("type"));
+    const u = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      let w = im.naturalWidth, hh = im.naturalHeight;
+      const c0 = document.createElement("canvas"); c0.width = w; c0.height = hh;
+      const g0 = c0.getContext("2d"); g0.drawImage(im, 0, 0);
+      let x0 = 0, y0 = 0, x1 = w, y1 = hh;
+      try { // rognage des marges transparentes
+        const d = g0.getImageData(0, 0, w, hh).data; let minX = w, minY = hh, maxX = -1, maxY = -1;
+        for (let y = 0; y < hh; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 10) { if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y; }
+        if (maxX >= 0) { x0 = minX; y0 = minY; x1 = maxX + 1; y1 = maxY + 1; }
+      } catch (e) {}
+      const cw = x1 - x0, ch = y1 - y0, k = Math.min(1, 256 / Math.max(cw, ch));
+      const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(cw * k)); c.height = Math.max(1, Math.round(ch * k));
+      const g = c.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(c0, x0, y0, cw, ch, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(u); res(c.toDataURL("image/png"));
+    };
+    im.onerror = () => { URL.revokeObjectURL(u); rej(new Error("load")); };
+    im.src = u;
+  });
+}
+
+/* =====================================================================
+   4. DONNÉES — profils
+   ===================================================================== */
+const TYPES = {
+  trade: { icon: "🔁", fr: "Échange", en: "TRADE", frTag: "ÉCHANGE" },
+  vente: { icon: "🏷️", fr: "Vente", en: "FOR SALE", frTag: "VENTE" },
+  achat: { icon: "🛒", fr: "Achat", en: "BUYING", frTag: "ACHAT" }
+};
+function mkItem(ref, extra) {
+  const p = CAT.byId[ref];
+  const lang = (st && st.lang) || "en";
+  return Object.assign({ uid: uid(), ref: p ? p.id : null, name: p ? (lang === "fr" && p.fr && p.cat !== "packs" ? frName(p) : p.en) : "", note: "", e: p ? p.e : "", img: "", q: "", p: "", tag: "", hot: 0 }, extra || {});
+}
+const frName = p => { const f = (p.fr || "").split("~")[0].trim(); return f ? f.charAt(0).toUpperCase() + f.slice(1) : p.en; };
+function defaults(type) {
+  const base = { type, theme: { trade: "grange", vente: "verger", achat: "lagon" }[type], layout: "list", sort: "manual", lang: "en", showTotal: true, user: "Perrier Lapadite", have: [], wants: [], ctaE: "🔥", ctaRef: null, haveTitle: "I HAVE", sub: "" };
+  if (type === "vente") return { ...base, kicker: "FOR SALE", title: "SHOP OPEN", wantTitle: "ITEMS FOR SALE", cta: "DM TO BUY", ctaE: "🛒", sub: "Prices per unit · DM me",
+    wants: [mkItem("lobster-tail", { q: "20", p: "1500" }), mkItem("diamond-ring", { q: "5", p: "12000", hot: 1 }), mkItem("olive-oil", { q: "50", p: "900" })] };
+  if (type === "achat") return { ...base, kicker: "BUYING", title: "WANTED", wantTitle: "I’M BUYING", cta: "SELL ME YOURS", ctaE: "💰", sub: "DM me your offer",
+    wants: [mkItem("duck-feather", { q: "100", p: "700" }), mkItem("tomato-sauce", { q: "30", p: "1100", hot: 1 })] };
+  return { ...base, kicker: "TRADE ALERT", title: "SELLING / SWAPPING", wantTitle: "WHAT I WANT", cta: "MIX ACCEPTED", ctaE: "🔥", sub: "DM me to trade",
+    have: [mkItem("bem-set", { q: "10" })],
+    wants: ["lemon-curd", "mayonnaise", "duck-feather", ["lobster-tail", 1], "soy-sauce", "blanket", ["diamond-ring", 1], "tomato-sauce", "olive-oil", ["strawberry-jam", 0, "1st page · no bb"]]
+      .map(x => Array.isArray(x) ? mkItem(x[0], { hot: x[1], note: x[2] || "", tag: "50:89" }) : mkItem(x, { tag: "50:89" })) };
+}
+const mkProfile = (type, name) => ({ ...defaults(type), id: uid(), name: name || TYPES[type].fr });
+
+let CUSTOM = store.get("hd5_custom", []);
+let SETTINGS = store.get("hd5_settings", { recent: [], to: "wants" });
+let STATE = null, st = null;
+
+/** Reprend les profils de l’ancienne version (même site GitHub Pages → même stockage). */
+function migrateOld() {
+  const old = store.get("tp4", null);
+  const oc = store.get("hd_custom_items", []);
+  if (Array.isArray(oc)) oc.forEach(x => {
+    if (!x || !x.n) return;
+    const id = "perso-" + slug(x.n);
+    if (CUSTOM.some(c => c.id === id)) return;
+    CUSTOM.push({ id, en: x.n, fr: x.text || "", e: x.e || "⭐" });
+    if (x.img && x.img.startsWith("data:")) { USERIMG.set("c:" + id, x.img); IDB.put("c:" + id, x.img); }
+  });
+  store.set("hd5_custom", CUSTOM);
+  if (!old || !Array.isArray(old.l) || !old.l.length) return null;
+  const conv = (w, isHave) => {
+    const [nm, note] = String(w.n || "").split("|").map(s => s.trim());
+    const p = findProduct(nm);
+    const it = mkItem(p && p.id, { name: nm || "", note: note || "", e: w.e || (p ? p.e : ""), q: w.q || "", p: w.p || "", tag: w.r || "", hot: w.hot ? 1 : 0 });
+    if (w.img && w.img.startsWith("data:")) { const k = "u:" + it.uid; USERIMG.set(k, w.img); IDB.put(k, w.img); it.img = "idb:" + k; }
+    return it;
+  };
+  const themeMap = { "Marché": "grange", "Bleuet": "lagon", "Verger": "verger", "Nuit": "nuit" };
+  const list = old.l.map(o => {
+    const type = o.type || "trade", d = defaults(type);
+    const pr = { ...d, id: o.id || uid(), name: o.name || TYPES[type].fr, theme: themeMap[o.theme] || d.theme, layout: +o.cols === 1 ? "list" : "grid2",
+      kicker: o.kicker ?? d.kicker, title: o.title ?? d.title, user: (o.user && !/Himanshu/.test(o.user)) ? o.user : "Perrier Lapadite",
+      haveTitle: o.haveLabel ?? d.haveTitle, wantTitle: o.wantTitle ?? d.wantTitle, cta: o.footer ?? d.cta, ctaE: o.footEmoji || d.ctaE, sub: o.sub ?? d.sub,
+      have: (o.have || []).filter(x => x.n || x.e).map(x => conv(x, true)), wants: (o.wants || []).filter(x => x.n).map(x => conv(x)) };
+    if (o.footImg && o.footImg.startsWith("data:")) { const k = "u:cta-" + pr.id; USERIMG.set(k, o.footImg); IDB.put(k, o.footImg); pr.ctaImg = "idb:" + k; }
+    return pr;
+  });
+  return { active: old.a, list };
+}
+function loadState() {
+  STATE = store.get("hd5_state", null);
+  if (!STATE || !Array.isArray(STATE.list) || !STATE.list.length) {
+    STATE = migrateOld() || { active: null, list: [mkProfile("trade"), mkProfile("vente"), mkProfile("achat")] };
+    if (store.get("tp4", null)) setTimeout(() => toast("Tes anciens profils ont été repris ✔"), 800);
+  }
+  st = STATE.list.find(p => p.id === STATE.active) || STATE.list[0];
+  STATE.active = st.id;
+}
+const saveSoon = debounce(() => { if (!store.set("hd5_state", STATE)) toast("Stockage plein : exporte une sauvegarde (Style)."); }, 400);
+const saveSettings = () => store.set("hd5_settings", SETTINGS);
+function changed() { scheduleDraw(); saveSoon(); renderSummary(); }
+function pushRecent(id) { if (!id) return; SETTINGS.recent = [id, ...(SETTINGS.recent || []).filter(x => x !== id)].slice(0, 18); saveSettings(); }
+
+/* =====================================================================
+   5. RENDU DE L’IMAGE (canvas 1080 px de large)
+   ===================================================================== */
+const THEMES = {
+  grange: { name: "Grange", bg1: "#fbf5ea", bg2: "#f2e3c8", card: "#fffdf8", ink: "#3a2416", mut: "#8f7a63", acc: "#d8432f", accD: "#a92e1f", tile: "#fbe8d2", chip: "#f6ecdd", tot: "#2f8a4a", cta: "#ffffff", line: "#ead9bf", hotBg: "#fff8dc", hotTile: "#ffefb0", hotChip: "#ffe9a6" },
+  verger: { name: "Verger", bg1: "#f2f8ec", bg2: "#d9ebcd", card: "#ffffff", ink: "#203520", mut: "#6c8264", acc: "#3c9a4f", accD: "#2a7539", tile: "#e5f3df", chip: "#edf5e8", tot: "#2a7539", cta: "#ffffff", line: "#d5e6cc", hotBg: "#fff8dc", hotTile: "#ffefb0", hotChip: "#ffe9a6" },
+  lagon:  { name: "Lagon",  bg1: "#eef6fd", bg2: "#d4e6f7", card: "#ffffff", ink: "#172a44", mut: "#62738b", acc: "#2f6fd6", accD: "#1f4fa5", tile: "#e3eefb", chip: "#e9f1fb", tot: "#1f7a5c", cta: "#ffffff", line: "#d2e1f2", hotBg: "#fff8dc", hotTile: "#ffefb0", hotChip: "#ffe9a6" },
+  ble:    { name: "Blé",    bg1: "#fff9e6", bg2: "#ffe9b3", card: "#fffdf6", ink: "#3d2b0e", mut: "#8c7550", acc: "#e38b00", accD: "#b86b00", tile: "#fff0c7", chip: "#fff3d6", tot: "#2f8a4a", cta: "#ffffff", line: "#f3dfae", hotBg: "#fff8dc", hotTile: "#ffefb0", hotChip: "#ffe9a6" },
+  rose:   { name: "Rose",   bg1: "#fff2f4", bg2: "#f8d9e1", card: "#ffffff", ink: "#3a1a24", mut: "#8e6772", acc: "#d94a73", accD: "#a8335a", tile: "#fde6ec", chip: "#fcebef", tot: "#2f8a4a", cta: "#ffffff", line: "#f2d3db", hotBg: "#fff8dc", hotTile: "#ffefb0", hotChip: "#ffe9a6" },
+  nuit:   { name: "Nuit",   bg1: "#1e1a30", bg2: "#2c2548", card: "#2f2a4b", ink: "#f6f1ff", mut: "#b2a8cf", acc: "#ffb938", accD: "#e08a00", tile: "#3b355c", chip: "#3b355c", tot: "#7be0a0", cta: "#2a1d00", line: "#463f6b", hotBg: "#3f3550", hotTile: "#55476a", hotChip: "#55476a" }
+};
+const LBL = {
+  en: { item: "ITEM", qty: "QTY", price: "PRICE / EA", total: "TOTAL", tag: "RATE", each: "/ea", items: n => n + (n > 1 ? " items" : " item"), type: t => TYPES[t].en, hot: "HOT" },
+  fr: { item: "ARTICLE", qty: "QTÉ", price: "PRIX / U", total: "TOTAL", tag: "TAUX", each: "/u", items: n => n + (n > 1 ? " articles" : " article"), type: t => TYPES[t].frTag, hot: "TOP" }
+};
+const FD = "'Lilita One', Nunito, system-ui, sans-serif", FB = "Nunito, system-ui, -apple-system, sans-serif";
+const EMOJI_F = "'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+const cv = $("#cv"), ctx = cv.getContext("2d");
+let drawRq = 0;
+function scheduleDraw() { if (drawRq) return; drawRq = requestAnimationFrame(() => { drawRq = 0; draw(); }); }
+
+function font(w, s, d) { ctx.font = d ? `400 ${s}px ${FD}` : `${w} ${s}px ${FB}`; }
+function ellipsis(t, maxW) { if (ctx.measureText(t).width <= maxW) return t; while (t.length > 1 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1); return t.trimEnd() + "…"; }
+/** Texte ajusté : réduit la taille jusqu’à min, puis coupe avec « … ». Renvoie la largeur dessinée. */
+function txt(t, x, y, o) {
+  const { w = 800, s = 24, d = false, c = "#000", al = "left", maxW = 0, min = 0, ls = 0 } = o || {};
+  let z = s; font(w, z, d);
+  if ("letterSpacing" in ctx) ctx.letterSpacing = ls ? ls + "px" : "0px";
+  if (maxW) { const mn = min || Math.round(s * .7); while (ctx.measureText(t).width > maxW && z > mn) { z--; font(w, z, d); } t = ellipsis(t, maxW); }
+  ctx.fillStyle = c; ctx.textAlign = al; ctx.textBaseline = "middle";
+  ctx.fillText(t, x, y);
+  const mw = ctx.measureText(t).width;
+  if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+  return mw;
+}
+function measure(t, w, s, d) { font(w, s, d); return ctx.measureText(t).width; }
+function rr(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2); ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function fillRR(x, y, w, h, r, fill, shadow) {
+  ctx.save();
+  if (shadow) { ctx.shadowColor = shadow; ctx.shadowBlur = 26; ctx.shadowOffsetY = 8; }
+  rr(x, y, w, h, r); ctx.fillStyle = fill; ctx.fill(); ctx.restore();
+}
+function strokeRR(x, y, w, h, r, color, lw) { rr(x, y, w, h, r); ctx.lineWidth = lw; ctx.strokeStyle = color; ctx.stroke(); }
+/** Pièce d’or dessinée (pas d’emoji → rendu identique partout). */
+function coin(cx, cy, r) {
+  ctx.save();
+  const g = ctx.createRadialGradient(cx - r * .35, cy - r * .4, r * .1, cx, cy, r);
+  g.addColorStop(0, "#fff6b8"); g.addColorStop(.45, "#ffcf33"); g.addColorStop(1, "#e08f00");
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fillStyle = g; ctx.fill();
+  ctx.lineWidth = Math.max(1.5, r * .14); ctx.strokeStyle = "#b46a00"; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, r * .62, 0, 7); ctx.lineWidth = Math.max(1, r * .1); ctx.strokeStyle = "rgba(180,106,0,.55)"; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx - r * .3, cy - r * .38, r * .22, r * .12, -.6, 0, 7); ctx.fillStyle = "rgba(255,255,255,.75)"; ctx.fill();
+  ctx.restore();
+}
+/** Prix avec pièce, aligné à droite sur xr. Renvoie la largeur. */
+function priceR(v, xr, cy, s, color, suffix, sufColor) {
+  let wS = 0;
+  if (suffix) { wS = txt(suffix, xr, cy + s * .08, { w: 800, s: Math.round(s * .62), c: sufColor, al: "right" }) + 6; }
+  const wN = txt(fmt(v), xr - wS, cy, { w: 900, s, c: color, al: "right" });
+  const r = s * .42;
+  coin(xr - wS - wN - r - 8, cy, r);
+  return wS + wN + r * 2 + 8;
+}
+function priceC(v, cx, cy, s, color, suffix, sufColor) {
+  const r = s * .42, wN = measure(fmt(v), 900, s), wS = suffix ? measure(suffix, 800, Math.round(s * .62)) + 6 : 0;
+  const tw = r * 2 + 8 + wN + wS;
+  return priceR(v, cx + tw / 2, cy, s, color, suffix, sufColor), tw;
+}
+/** Image d’un article / produit (ou emoji) centrée dans un carré de taille z. */
+function icon(s, emoji, cx, cy, z) {
+  if (s && s.ok && s.el) {
+    const im = s.el, iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height, k = z / Math.max(iw, ih);
+    ctx.save(); ctx.shadowColor = "rgba(0,0,0,.18)"; ctx.shadowBlur = z * .08; ctx.shadowOffsetY = z * .04;
+    ctx.drawImage(im, cx - iw * k / 2, cy - ih * k / 2, iw * k, ih * k); ctx.restore();
+  } else if (emoji) {
+    ctx.font = Math.round(z * .78) + "px " + EMOJI_F; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#000";
+    ctx.fillText(emoji, cx, cy + z * .04);
+  }
+}
+function pill(x, y, w, hh, fill, text, o) { fillRR(x, y, w, hh, hh / 2, fill); txt(text, x + w / 2, y + hh / 2 + 1, Object.assign({ al: "center" }, o)); }
+function star(cx, cy, r, T) {
+  ctx.save(); ctx.shadowColor = "rgba(0,0,0,.25)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fillStyle = "#ffc928"; ctx.fill(); ctx.restore();
+  ctx.lineWidth = 3; ctx.strokeStyle = "#fff"; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke();
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? r * .27 : r * .62; ctx.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad); }
+  ctx.closePath(); ctx.fillStyle = "#8a5200"; ctx.fill();
+}
+function wrapLines(t, maxW, w, s, d, maxLines) {
+  font(w, s, d);
+  const words = t.split(/\s+/), lines = []; let cur = "";
+  for (const wd of words) { const tst = cur ? cur + " " + wd : wd; if (ctx.measureText(tst).width <= maxW || !cur) cur = tst; else { lines.push(cur); cur = wd; } }
+  if (cur) lines.push(cur);
+  if (lines.length > maxLines) return null;
+  if (lines.some(l => ctx.measureText(l).width > maxW)) return null;
+  return lines;
+}
+function sortedWants() {
+  const a = st.wants.filter(w => (w.name || "").trim() || w.ref);
+  const by = { qty: (x, y) => num(y.q) - num(x.q), price: (x, y) => num(y.p) - num(x.p), name: (x, y) => (x.name || "").localeCompare(y.name || "") }[st.sort];
+  return by ? a.slice().sort(by) : a;
+}
+const itemTotal = w => num(w.p) * (num(w.q) || 1);
+
+function draw() {
+  const T = THEMES[st.theme] || THEMES.grange, L = LBL[st.lang] || LBL.en;
+  const W = 1080, P = 56, type = st.type || "trade", trade = type === "trade";
+  const wants = sortedWants();
+  const have = trade ? st.have.filter(x => (x.name || "").trim() || x.ref) : [];
+  const anyQ = wants.some(w => num(w.q) > 0), anyP = wants.some(w => num(w.p) > 0), anyTag = wants.some(w => (w.tag || "").trim()), anyNote = wants.some(w => (w.note || "").trim());
+  const showTot = st.showTotal && anyP;
+  const total = wants.reduce((a, w) => a + itemTotal(w), 0);
+  const grid = st.layout === "grid2" || st.layout === "grid3", C = st.layout === "grid3" ? 3 : 2;
+
+  /* ---------- mesures ---------- */
+  font(400, 92, true);
+  let tSize = 92, tLines = null;
+  for (; tSize >= 54 && !(tLines = wrapLines(st.title || " ", W - 2 * P, 400, tSize, true, 2)); tSize -= 4);
+  if (!tLines) { tSize = 54; tLines = [st.title || ""]; }
+  let H = 56 + 54 + 40 + (st.kicker ? 40 : 0) + tLines.length * tSize * 1.02 + 30;
+  const hcols = Math.min(3, Math.max(1, have.length)), hrows = Math.ceil(have.length / hcols);
+  if (have.length) H += 74 + hrows * 132 + (hrows - 1) * 16 + 30;
+  H += 74;
+  let rowH = 0, tileW = 0, tileH = 0, imgH = 0;
+  if (!wants.length) H += 120;
+  else if (grid) {
+    tileW = (W - 2 * P - 22 * (C - 1)) / C; imgH = C === 2 ? 196 : 150;
+    tileH = 14 + imgH + 16 + (C === 2 ? 40 : 34) + (anyNote ? 28 : 0) + (anyP ? 58 : 0) + (anyP && showTot && anyQ ? 26 : 0) + 18;
+    H += Math.ceil(wants.length / C) * (tileH + 22) - 22 + 30;
+  } else {
+    rowH = anyNote ? 116 : 104;
+    H += 42 + wants.length * (rowH + 12) - 12 + 30;
+  }
+  const hasCta = (st.cta || "").trim() || showTot;
+  if (hasCta) H += 124 + 26;
+  if ((st.sub || "").trim()) H += 46;
+  H = Math.round(H + 34);
+  if (cv.width !== W) cv.width = W;
+  if (cv.height !== H) cv.height = H;
+
+  /* ---------- fond ---------- */
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.shadowColor = "transparent";
+  const bg = ctx.createLinearGradient(0, 0, W * .3, H); bg.addColorStop(0, T.bg1); bg.addColorStop(1, T.bg2);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.globalAlpha = .1; ctx.fillStyle = T.acc;
+  ctx.beginPath(); ctx.arc(W - 40, 70, 250, 0, 7); ctx.fill();
+  ctx.globalAlpha = .06; ctx.beginPath(); ctx.arc(-30, H * .62, 230, 0, 7); ctx.fill();
+  ctx.globalAlpha = .07; ctx.fillStyle = T.ink;
+  for (let y = 18; y < H; y += 30) for (let x = 18 + ((y / 30) % 2) * 15; x < W; x += 30) { ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 7); ctx.fill(); }
+  ctx.restore();
+
+  /* ---------- en-tête ---------- */
+  let y = 56;
+  const tl = (TYPES[type].icon ? "" : "") + L.type(type);
+  const tw = measure(tl, 900, 24) + tl.length * 2 + 76;
+  fillRR(P, y, tw, 54, 27, T.acc, "rgba(0,0,0,.12)");
+  font(400, 26); ctx.font = "26px " + EMOJI_F; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText(TYPES[type].icon, P + 18, y + 28);
+  txt(tl, P + 56, y + 28, { w: 900, s: 24, c: T.cta, ls: 2 });
+  const user = (st.user || "").trim();
+  if (user) {
+    const maxU = W - 2 * P - tw - 40;
+    font(800, 26); let uw = Math.min(ctx.measureText(user).width, maxU - 80);
+    const cw = uw + 84, cx = W - P - cw;
+    fillRR(cx, y, cw, 54, 27, T.card, "rgba(0,0,0,.10)");
+    ctx.beginPath(); ctx.arc(cx + 27, y + 27, 19, 0, 7); ctx.fillStyle = T.acc; ctx.fill();
+    txt(user.charAt(0).toUpperCase(), cx + 27, y + 28, { w: 900, s: 20, c: T.cta, al: "center" });
+    txt(user, cx + 56, y + 28, { w: 800, s: 26, c: T.ink, maxW: uw + 1 });
+  }
+  y += 54 + 40;
+  if (st.kicker) { txt(st.kicker.toUpperCase(), P, y + 4, { w: 900, s: 26, c: T.acc, ls: 5, maxW: W - 2 * P }); y += 40; }
+  tLines.forEach((ln, i) => {
+    const ly = y + tSize * .5 + i * tSize * 1.02;
+    ctx.save(); ctx.globalAlpha = .12; txt(ln, P + 2, ly + 5, { s: tSize, d: true, c: T.ink }); ctx.restore();
+    txt(ln, P, ly, { s: tSize, d: true, c: T.ink });
+  });
+  y += tLines.length * tSize * 1.02 + 30;
+
+  /* ---------- titre de section ---------- */
+  const section = (label, right) => {
+    txt(label, P, y + 22, { s: 38, d: true, c: T.ink, maxW: W - 2 * P - 220 });
+    fillRR(P, y + 50, 64, 7, 4, T.acc);
+    if (right) txt(right, W - P, y + 24, { w: 800, s: 22, c: T.mut, al: "right" });
+    y += 74;
+  };
+
+  /* ---------- J’ai ---------- */
+  if (have.length) {
+    section(st.haveTitle || "I HAVE", "");
+    const hw = (W - 2 * P - 18 * (hcols - 1)) / hcols;
+    have.forEach((it, i) => {
+      const c = i % hcols, r = (i / hcols) | 0, x = P + c * (hw + 18), yy = y + r * 148;
+      fillRR(x, yy, hw, 132, 28, T.card, "rgba(40,25,10,.10)");
+      fillRR(x + 14, yy + 14, 104, 104, 22, T.tile);
+      icon(itemState(it), it.e, x + 66, yy + 66, 86);
+      const q = num(it.q);
+      const tx0 = x + 134, mw = hw - 134 - 18;
+      if (q > 0) {
+        txt(it.name || "", tx0, yy + 48, { s: hcols === 1 ? 40 : 32, d: true, c: T.ink, maxW: mw, min: 20 });
+        txt("×" + fmt(q), tx0, yy + 90, { w: 900, s: 30, c: T.acc, maxW: mw });
+      } else txt(it.name || "", tx0, yy + 66, { s: hcols === 1 ? 40 : 32, d: true, c: T.ink, maxW: mw, min: 20 });
+    });
+    y += hrows * 132 + (hrows - 1) * 16 + 30;
+  }
+
+  /* ---------- Je cherche / à vendre ---------- */
+  section(st.wantTitle || "", wants.length ? L.items(wants.length) : "");
+  if (!wants.length) {
+    fillRR(P, y, W - 2 * P, 96, 26, T.card);
+    txt("—", W / 2, y + 48, { w: 800, s: 30, c: T.mut, al: "center" });
+    y += 120;
+  } else if (!grid) {
+    // colonnes de droite (libellées une seule fois en en-tête : plus aucune confusion prix / quantité)
+    const cols = [];
+    if (showTot && anyQ) cols.push({ k: "tot", w: 200, l: L.total });
+    if (anyP) cols.push({ k: "p", w: 196, l: L.price });
+    if (anyQ) cols.push({ k: "q", w: 104, l: L.qty });
+    if (anyTag) cols.push({ k: "tag", w: 136, l: L.tag });
+    let xr = W - P - 26;
+    cols.forEach(c => { c.xr = xr; xr -= c.w + 14; });
+    const nameX = P + 18 + 80 + 22, nameW = xr - nameX + 6;
+    txt(L.item, nameX, y + 14, { w: 900, s: 17, c: T.mut, ls: 2.5 });
+    cols.forEach(c => txt(c.l, c.k === "tag" ? c.xr - c.w / 2 : c.xr, y + 14, { w: 900, s: 17, c: T.mut, ls: 2.5, al: c.k === "tag" ? "center" : "right" }));
+    y += 42;
+    wants.forEach(w => {
+      const hot = !!w.hot, cy = y + rowH / 2;
+      fillRR(P, y, W - 2 * P, rowH, 26, hot ? T.hotBg : T.card, "rgba(40,25,10,.09)");
+      if (hot) { strokeRR(P + 1.5, y + 1.5, W - 2 * P - 3, rowH - 3, 25, "#f5b800", 3.5); }
+      fillRR(P + 14, y + (rowH - 80) / 2, 80, 80, 20, hot ? T.hotTile : T.tile);
+      icon(itemState(w), w.e, P + 54, cy, 66);
+      if (hot) star(P + 18, y + (rowH - 80) / 2 + 4, 15, T);
+      const ink = T.ink, mut = T.mut;
+      if ((w.note || "").trim()) {
+        txt(w.name || "", nameX, cy - 17, { w: 900, s: 32, c: ink, maxW: nameW, min: 20 });
+        txt(w.note, nameX, cy + 22, { w: 700, s: 22, c: mut, maxW: nameW, min: 16 });
+      } else txt(w.name || "", nameX, cy + 1, { w: 900, s: 33, c: ink, maxW: nameW, min: 20 });
+      const q = num(w.q), p = num(w.p);
+      cols.forEach(c => {
+        if (c.k === "q" && q > 0) txt("×" + fmt(q), c.xr, cy + 1, { w: 900, s: 32, c: ink, al: "right", maxW: c.w });
+        if (c.k === "p" && p > 0) priceR(p, c.xr, cy + 1, 30, ink);
+        if (c.k === "tot" && p > 0) priceR(itemTotal(w), c.xr, cy + 1, 30, T.tot);
+        if (c.k === "tag" && (w.tag || "").trim()) {
+          const t = w.tag.trim(), pw = Math.min(c.w, measure(t, 900, 24) + 30);
+          pill(c.xr - c.w / 2 - pw / 2, cy - 20, pw, 40, hot ? T.hotChip : T.chip, t, { w: 900, s: 24, c: T.acc, maxW: c.w - 20 });
+        }
+      });
+      y += rowH + 12;
+    });
+    y += 18;
+  } else {
+    wants.forEach((w, i) => {
+      const c = i % C, r = (i / C) | 0, x = P + c * (tileW + 22), yy = y + r * (tileH + 22), hot = !!w.hot;
+      fillRR(x, yy, tileW, tileH, 30, hot ? T.hotBg : T.card, "rgba(40,25,10,.10)");
+      if (hot) strokeRR(x + 1.5, yy + 1.5, tileW - 3, tileH - 3, 29, "#f5b800", 3.5);
+      const ix = x + 14, iy = yy + 14, iw = tileW - 28;
+      fillRR(ix, iy, iw, imgH, 22, hot ? T.hotTile : T.tile);
+      icon(itemState(w), w.e, ix + iw / 2, iy + imgH / 2, imgH * .74);
+      if (hot) star(ix + 24, iy + 24, 18, T);
+      const q = num(w.q), p = num(w.p);
+      if (q > 0) { // badge quantité façon jeu, en bas à droite de l’image
+        const t = "×" + fmt(q), bw = measure(t, 900, 28) + 28;
+        fillRR(ix + iw - bw - 10, iy + imgH - 52, bw, 42, 21, "rgba(28,20,12,.86)");
+        txt(t, ix + iw - bw / 2 - 10, iy + imgH - 30, { w: 900, s: 28, c: "#fff", al: "center" });
+      }
+      if ((w.tag || "").trim()) {
+        const t = w.tag.trim(), bw = Math.min(iw - 70, measure(t, 900, 22) + 26);
+        pill(ix + iw - bw - 10, iy + 10, bw, 36, T.acc, t, { w: 900, s: 22, c: T.cta, maxW: bw - 16 });
+      }
+      const ink = T.ink, mut = T.mut;
+      let ty = iy + imgH + 16 + (C === 2 ? 20 : 17);
+      txt(w.name || "", x + tileW / 2, ty, { w: 900, s: C === 2 ? 32 : 26, c: ink, al: "center", maxW: tileW - 28, min: 16 });
+      ty += C === 2 ? 20 : 17;
+      if (anyNote) { if ((w.note || "").trim()) txt(w.note, x + tileW / 2, ty + 12, { w: 700, s: C === 2 ? 21 : 18, c: mut, al: "center", maxW: tileW - 28 }); ty += 28; }
+      if (anyP) {
+        ty += 8;
+        if (p > 0) {
+          const ph = 46, s = C === 2 ? 28 : 24;
+          const inner = measure(fmt(p), 900, s) + s * .84 + 8 + (q > 0 ? measure(L.each, 800, Math.round(s * .62)) + 6 : 0);
+          const pw = Math.min(tileW - 24, inner + 34);
+          fillRR(x + tileW / 2 - pw / 2, ty, pw, ph, 23, hot ? T.hotChip : T.chip);
+          priceC(p, x + tileW / 2, ty + ph / 2 + 1, s, ink, q > 0 ? L.each : "", mut);
+          if (showTot && anyQ && q > 0) txt(L.total.charAt(0) + L.total.slice(1).toLowerCase() + " " + fmt(itemTotal(w)), x + tileW / 2, ty + ph + 18, { w: 800, s: C === 2 ? 20 : 17, c: T.tot, al: "center", maxW: tileW - 28 });
+        }
+      }
+    });
+    y += Math.ceil(wants.length / C) * (tileH + 22) - 22 + 30;
+  }
+
+  /* ---------- bandeau d’appel + total ---------- */
+  if (hasCta) {
+    const bh = 124, g = ctx.createLinearGradient(P, y, W - P, y + bh);
+    g.addColorStop(0, T.acc); g.addColorStop(1, T.accD);
+    ctx.save(); ctx.shadowColor = "rgba(0,0,0,.22)"; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12; rr(P, y, W - 2 * P, bh, 36); ctx.fillStyle = g; ctx.fill(); ctx.restore();
+    ctx.save(); rr(P, y, W - 2 * P, bh, 36); ctx.clip(); ctx.globalAlpha = .12; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(W - P - 60, y - 10, 120, 0, 7); ctx.fill(); ctx.restore();
+    ctx.beginPath(); ctx.arc(P + 66, y + bh / 2, 44, 0, 7); ctx.fillStyle = "rgba(255,255,255,.95)"; ctx.fill();
+    const ctaS = st.ctaImg ? srcState(st.ctaImg.startsWith("idb:") ? (USERIMG.get(st.ctaImg.slice(4)) || "") : st.ctaImg) : (st.ctaRef ? prodState(st.ctaRef) : null);
+    icon(ctaS, st.ctaE || "🔥", P + 66, y + bh / 2, 58);
+    const right = showTot && total > 0;
+    let rw = 0;
+    if (right) {
+      font(900, 40); rw = measure(fmt(total), 900, 40) + 52;
+      rw = Math.max(rw, measure(L.total, 900, 18) + 10);
+      txt(L.total, W - P - 34, y + 38, { w: 900, s: 18, c: T.cta, al: "right", ls: 3 });
+      ctx.save(); ctx.globalAlpha = .98; priceR(total, W - P - 34, y + 80, 40, T.cta); ctx.restore();
+    }
+    txt((st.cta || "").trim(), P + 132, y + bh / 2 + 2, { s: 50, d: true, c: T.cta, maxW: W - 2 * P - 132 - 34 - (right ? rw + 30 : 0), min: 26 });
+    y += bh + 26;
+  }
+  if ((st.sub || "").trim()) { txt(st.sub.trim(), W / 2, y + 18, { w: 800, s: 25, c: T.mut, al: "center", maxW: W - 2 * P }); }
+
+  // vignette mobile + infos
+  const mc = $("#miniCv"); if (mc) { const k = mc.width / W; if (mc.height !== Math.round(H * k)) mc.height = Math.round(H * k); mc.getContext("2d").drawImage(cv, 0, 0, mc.width, mc.height); }
+  $("#pvSize").textContent = W + " × " + H + " px";
+  $("#pvCount").textContent = L.items(wants.length) + (total ? " · " + fmt(total) + " 🪙" : "");
+}
+
+/* =====================================================================
+   6. INTERFACE
+   ===================================================================== */
+/* ---------- feuille modale ---------- */
+function openSheet(title, body) {
+  $("#sheetT").textContent = title;
+  const b = $("#sheetB"); b.textContent = ""; b.append(...[].concat(body)); b.scrollTop = 0;
+  $("#scrim").classList.add("open"); $("#sheet").classList.add("open");
+}
+function closeSheet() { $("#scrim").classList.remove("open"); $("#sheet").classList.remove("open"); }
+$("#scrim").onclick = closeSheet; $("#sheetX").onclick = closeSheet;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+
+/* ---------- onglets ---------- */
+function tab(t) {
+  document.body.dataset.tab = t;
+  $$("#tabbar [data-t]").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+  if (t === "images") renderImgGrid();
+  if (t === "prev") draw();
+  scrollTo({ top: 0 });
+}
+$$("#tabbar [data-t]").forEach(b => b.onclick = () => tab(b.dataset.t));
+$("#mini").onclick = () => tab("prev");
+
+/* ---------- profils ---------- */
+function renderProfiles() {
+  const f = $("#profiles"); f.textContent = "";
+  STATE.list.forEach(p => f.append(h("button", { class: "pchip" + (p.id === st.id ? " on" : ""), onclick: () => selectProfile(p.id) }, TYPES[p.type || "trade"].icon + " " + (p.name || "Profil"))));
+  f.append(h("button", { class: "pchip add", title: "Nouveau profil", "aria-label": "Nouveau profil", onclick: newProfileSheet }, "＋"));
+}
+function newProfileSheet() {
+  openSheet("Nouveau profil", h("div", { class: "menu" }, Object.keys(TYPES).map(t => h("button", { onclick: () => { const p = mkProfile(t); STATE.list.push(p); closeSheet(); selectProfile(p.id); toast("Profil « " + p.name + " » créé"); } }, h("i", null, TYPES[t].icon), "Annonce de " + TYPES[t].fr.toLowerCase()))));
+}
+function selectProfile(id) {
+  st = STATE.list.find(p => p.id === id) || STATE.list[0]; STATE.active = st.id;
+  renderAll(); changed();
+}
+function renderAll() { renderProfiles(); renderCats(); renderResults(); renderLists(); renderStyle(); renderSummary(); scheduleDraw(); }
+
+/* ---------- recherche ---------- */
+let curCat = "pop", resLimit = 16;
+const baseLimit = () => $("#q").value ? 48 : 16;
+function renderCats() {
+  const c = $("#cats"); c.textContent = "";
+  CATS.forEach(k => {
+    if (k.id === "recent" && !(SETTINGS.recent || []).length) return;
+    if (k.id === "perso" && !CAT.list.some(p => p.cat === "perso")) return;
+    if (k.id === "other" && !CAT.list.some(p => p.cat === "other")) return;
+    c.append(h("button", { class: "chip" + (curCat === k.id ? " on" : ""), onclick: () => { curCat = k.id; resLimit = 16; renderCats(); renderResults(); } }, k.fr));
+  });
+  const trade = st.type === "trade";
+  $("#target").hidden = !trade;
+  $$("#target button").forEach(b => { b.classList.toggle("on", b.dataset.to === (trade ? SETTINGS.to : "wants")); b.onclick = () => { SETTINGS.to = b.dataset.to; saveSettings(); renderCats(); renderResults(); }; });
+}
+const targetList = () => st.type === "trade" && SETTINGS.to === "have" ? st.have : st.wants;
+function renderResults() {
+  const q = $("#q").value;
+  $("#sbox").classList.toggle("has", !!q);
+  const res = search(q, q ? "all" : curCat), box = $("#results");
+  box.textContent = "";
+  if (!res.length) { box.append(h("div", { class: "empty", style: "grid-column:1/-1" }, q ? "Aucun produit trouvé. Ajoute-le en article libre ou crée-le dans « Images »." : "Rien ici pour l’instant.")); $("#moreRes").hidden = true; return; }
+  const inList = new Map(); targetList().forEach(it => it.ref && inList.set(it.ref, (inList.get(it.ref) || 0) + 1));
+  res.slice(0, resLimit).forEach(p => {
+    const t = h("button", { class: "tile", title: p.en, onclick: () => addFromCatalog(p) },
+      thumb(prodState(p.id), p.e),
+      h("b", null, p.en),
+      p.fr && p.cat !== "packs" ? h("small", null, frName(p)) : (p.cat === "packs" ? h("small", null, "Lot de 3") : null));
+    if (inList.has(p.id)) t.append(h("span", { class: "in" }, "✓"));
+    box.append(t);
+  });
+  $("#moreRes").hidden = res.length <= resLimit;
+}
+$("#moreRes").onclick = () => { resLimit += 48; renderResults(); };
+$("#q").addEventListener("input", debounce(() => { resLimit = baseLimit(); renderResults(); }, 90));
+$("#q").addEventListener("keydown", e => { if (e.key === "Enter") { const r = search($("#q").value, "all")[0]; if (r) addFromCatalog(r); e.preventDefault(); } });
+$("#qclr").onclick = () => { $("#q").value = ""; renderResults(); $("#q").focus(); };
+function addFromCatalog(p) {
+  const list = targetList(), ex = list.find(it => it.ref === p.id);
+  if (ex) { flashItem(ex.uid); toast(p.en + " est déjà dans la liste"); return; }
+  if (list.length >= 30) return toast("30 articles maximum par image.");
+  list.push(mkItem(p.id)); pushRecent(p.id);
+  renderLists(); renderResults(); changed();
+  toast("✓ " + p.en + " ajouté");
+}
+$("#freeAdd").onclick = () => {
+  const it = mkItem(null, { name: $("#q").value.trim(), e: "📦" });
+  targetList().push(it); renderLists(); changed();
+  setTimeout(() => { const el = document.querySelector(`[data-uid="${it.uid}"] .name`); if (el) { el.focus(); el.scrollIntoView({ block: "center", behavior: "smooth" }); } }, 50);
+};
+function flashItem(u) { const el = document.querySelector(`[data-uid="${u}"]`); if (!el) return; el.scrollIntoView({ block: "center", behavior: "smooth" }); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1200); }
+
+/* ---------- listes d’articles ---------- */
+function renderSummary() {
+  const w = st.wants.filter(x => (x.name || "").trim() || x.ref), tot = w.reduce((a, x) => a + itemTotal(x), 0);
+  const s = $("#summary"); s.textContent = "";
+  s.append(h("div", null, h("div", { class: "k" }, "Articles"), h("div", { class: "v" }, String(w.length) + (st.type === "trade" && st.have.length ? " · " + st.have.length + " proposé" + (st.have.length > 1 ? "s" : "") : ""))),
+    h("div", { style: "text-align:right" }, h("div", { class: "k" }, "Total"), h("div", { class: "v", style: "justify-content:flex-end" }, tot ? [h("i", { class: "coin" }), fmt(tot)] : "—")));
+  $("#wantN").textContent = w.length ? w.length + " article" + (w.length > 1 ? "s" : "") : "";
+  $("#haveN").textContent = st.have.length ? st.have.length + " article" + (st.have.length > 1 ? "s" : "") : "";
+}
+function renderLists() {
+  const trade = st.type === "trade";
+  $("#haveBox").hidden = !trade;
+  $("#wantH").textContent = trade ? "Je cherche" : st.type === "vente" ? "À vendre" : "À acheter";
+  const hl = $("#haveList"); hl.textContent = "";
+  st.have.forEach((it, i) => hl.append(itemCard(it, st.have, true)));
+  if (!st.have.length) hl.append(h("div", { class: "empty card" }, "Choisis « J’ai » au-dessus de la recherche pour ajouter ce que tu proposes."));
+  const wl = $("#wantList"); wl.textContent = "";
+  st.wants.forEach(it => wl.append(itemCard(it, st.wants, false)));
+  if (!st.wants.length) wl.append(h("div", { class: "empty card" }, "Utilise la recherche pour ajouter des produits."));
+  renderSummary();
+}
+function itemCard(it, list, isHave) {
+  const trade = st.type === "trade";
+  const card = h("div", { class: "item" + (isHave ? " haveitem" : "") + (it.hot ? " hot" : ""), "data-uid": it.uid });
+  const tb = h("button", { class: "thumbbtn", title: "Changer l’image", onclick: () => imageSheet(it) }, thumb(itemState(it), it.e));
+  const name = h("input", { class: "inp name", value: it.name || "", placeholder: "Nom de l’article", oninput: () => { it.name = name.value; changed(); } });
+  const note = h("input", { class: "inp note", value: it.note || "", placeholder: isHave ? "" : "＋ note (ex. no bb, 1re page…)", oninput: () => { it.note = note.value; changed(); } });
+  const nm = h("div", { class: "nm" }, name, isHave ? null : note);
+  const more = h("button", { class: "ib", title: "Plus d’actions", "aria-label": "Plus d’actions", onclick: () => itemMenu(it, list) }, "⋯");
+  if (isHave) {
+    card.append(h("div", { class: "i1" }, tb, nm, stepper(it, "q", () => {}), more));
+    return card;
+  }
+  const starB = h("button", { class: "ib star" + (it.hot ? " on" : ""), title: "Mettre en avant", "aria-label": "Mettre en avant", onclick: () => { it.hot = it.hot ? 0 : 1; starB.classList.toggle("on", !!it.hot); card.classList.toggle("hot", !!it.hot); changed(); } }, "★");
+  card.append(h("div", { class: "i1" }, tb, nm, starB, more));
+  const totV = h("div", { class: "totv" });
+  const upd = () => { const t = itemTotal(it); totV.textContent = ""; if (num(it.p) > 0) { totV.classList.remove("zero"); totV.append(h("i", { class: "coin" }), fmt(t)); } else { totV.classList.add("zero"); totV.append("—"); } };
+  upd();
+  const price = h("input", { value: it.p || "", inputMode: "decimal", placeholder: "0", "aria-label": "Prix unitaire", oninput: () => { it.p = price.value; upd(); changed(); } });
+  const f = [
+    h("label", { class: "fld" }, h("span", null, "Quantité"), stepper(it, "q", upd)),
+    h("label", { class: "fld" }, h("span", null, "Prix / unité"), h("div", { class: "money" }, h("i", { class: "coin" }), price))
+  ];
+  if (trade) f.push(h("label", { class: "fld" }, h("span", null, "Taux"), h("input", { class: "inp tagin", value: it.tag || "", placeholder: "50:89", oninput: e => { it.tag = e.target.value; changed(); } })));
+  else f.push(h("div", { class: "fld" }, h("span", null, "Total"), totV));
+  card.append(h("div", { class: "i2" }, f));
+  return card;
+}
+function stepper(it, k, after) {
+  const inp = h("input", { value: it[k] || "", inputMode: "numeric", placeholder: "–", "aria-label": "Quantité", oninput: () => { it[k] = inp.value; after(); changed(); } });
+  const bump = d => { const v = Math.max(0, Math.round(num(it[k])) + d); it[k] = v ? String(v) : ""; inp.value = it[k]; after(); changed(); };
+  return h("div", { class: "step" }, h("button", { type: "button", "aria-label": "Moins", onclick: e => { e.preventDefault(); bump(-1); } }, "−"), inp, h("button", { type: "button", "aria-label": "Plus", onclick: e => { e.preventDefault(); bump(1); } }, "+"));
+}
+function itemMenu(it, list) {
+  const i = list.indexOf(it);
+  const act = (fn) => () => { fn(); closeSheet(); renderLists(); renderResults(); changed(); };
+  openSheet(it.name || "Article", [
+    h("div", { class: "bigprev" }, thumb(itemState(it), it.e), h("div", null, h("b", null, it.name || "Sans nom"), h("small", null, it.ref ? "Produit de la bibliothèque" : "Article libre"))),
+    h("div", { class: "menu" },
+      h("button", { onclick: () => { closeSheet(); setTimeout(() => imageSheet(it), 220); } }, h("i", null, "🖼️"), "Changer l’image"),
+      i > 0 ? h("button", { onclick: act(() => { list.splice(i, 1); list.splice(i - 1, 0, it); }) }, h("i", null, "↑"), "Monter") : null,
+      i < list.length - 1 ? h("button", { onclick: act(() => { list.splice(i, 1); list.splice(i + 1, 0, it); }) }, h("i", null, "↓"), "Descendre") : null,
+      i > 0 ? h("button", { onclick: act(() => { list.splice(i, 1); list.unshift(it); }) }, h("i", null, "⤒"), "Mettre en premier") : null,
+      h("button", { onclick: act(() => list.splice(i + 1, 0, Object.assign(clone(it), { uid: uid() }))) }, h("i", null, "⧉"), "Dupliquer"),
+      st.type === "trade" ? h("button", { onclick: act(() => { list.splice(i, 1); (list === st.have ? st.wants : st.have).push(it); }) }, h("i", null, "⇄"), list === st.have ? "Déplacer vers « Je cherche »" : "Déplacer vers « J’ai »") : null,
+      h("button", { class: "danger", onclick: act(() => list.splice(i, 1)) }, h("i", null, "🗑"), "Supprimer"))
+  ]);
+}
+
+/* ---------- feuille « image d’un article » ---------- */
+function imageSheet(it, opts) {
+  opts = opts || {};
+  const target = opts.target || it; // it = article OU objet {e, img, ref} (bandeau)
+  const p = target.ref && CAT.byId[target.ref];
+  const prev = h("div", { class: "bigprev" }, thumb(opts.state ? opts.state() : itemState(target), target.e), h("div", null, h("b", null, target.name || (p ? p.en : opts.title || "Image")), h("small", null, target.img && target.img !== "none" ? "Image personnalisée" : p ? "Image du jeu (bibliothèque)" : "Emoji")));
+  const done = msg => { closeSheet(); renderLists(); renderStyle(); renderResults(); changed(); if (msg) toast(msg); };
+  // 1. bibliothèque
+  const q = h("input", { class: "inp", type: "search", placeholder: "Chercher l’image d’un produit…", value: target.name || "" });
+  const rename = h("input", { type: "checkbox", checked: !target.name || !!opts.rename });
+  const grid = h("div", { class: "grid", style: "margin-top:8px" });
+  const fill = () => { grid.textContent = ""; search(q.value, q.value ? "all" : "pop").slice(0, 40).forEach(pp => grid.append(h("button", { class: "tile", onclick: () => { target.ref = pp.id; target.img = ""; target.e = pp.e; if (rename.checked && !opts.noName) target.name = st.lang === "fr" && pp.cat !== "packs" ? frName(pp) : pp.en; pushRecent(pp.id); done("Image associée : " + pp.en); } }, thumb(prodState(pp.id), pp.e), h("b", null, pp.en)))); };
+  q.oninput = debounce(fill, 90); fill();
+  // 2. import
+  const file = h("input", { type: "file", accept: "image/*" });
+  const forAll = h("input", { type: "checkbox", checked: true });
+  file.onchange = async () => {
+    try {
+      const d = await processFile(file.files[0]);
+      if (p && forAll.checked && !p.parts) {
+        USERIMG.set("ov:" + p.id, d); IDB.put("ov:" + p.id, d); resetProdImage(p.id); target.img = "";
+        done("Image enregistrée pour tous les « " + p.en + " »");
+      } else {
+        const k = "u:" + uid(); USERIMG.set(k, d); IDB.put(k, d); target.img = "idb:" + k; done("Image importée ✔");
+      }
+    } catch (e) { toast("Image illisible."); }
+  };
+  // 3. lien
+  const url = h("input", { class: "inp", type: "url", placeholder: "https://… (lien direct vers une image)" });
+  // 4. emoji
+  const emo = h("input", { class: "inp", value: target.e || "", maxLength: 8, style: "font-size:24px;text-align:center;max-width:110px" });
+  const blocks = [prev,
+    h("div", null, h("label", { class: "lbl" }, "Image du jeu"), q, opts.noName ? null : h("label", { class: "switch", style: "min-height:36px;font-size:13px" }, "Renommer l’article avec le produit choisi", rename), grid),
+    h("div", null, h("label", { class: "lbl" }, "Importer ta propre image"),
+      h("label", { class: "btn full filebtn" }, "📷 Choisir une photo / capture", file),
+      p && !p.parts && !opts.noOverride ? h("label", { class: "switch", style: "min-height:36px;font-size:13px" }, "Utiliser pour tous les « " + p.en + " »", forAll) : null),
+    h("div", null, h("label", { class: "lbl" }, "Ou coller un lien d’image"), h("div", { class: "row" }, url, h("button", { class: "btn", onclick: () => { const u = url.value.trim(); if (!/^https?:\/\//.test(u)) return toast("Lien invalide"); target.img = u; done("Lien d’image appliqué"); } }, "OK"))),
+    h("div", null, h("label", { class: "lbl" }, "Emoji de secours"), h("div", { class: "row" }, emo,
+      h("button", { class: "btn", onclick: () => { target.e = emo.value.trim(); done(); } }, "Enregistrer"),
+      h("button", { class: "btn", onclick: () => { target.e = emo.value.trim() || target.e; target.img = "none"; done("Emoji seul"); } }, "Emoji seul"))),
+  ];
+  if (target.img) blocks.push(h("button", { class: "btn dashed", onclick: () => { target.img = ""; done("Image d’origine rétablie"); } }, "↺ Revenir à l’image du jeu"));
+  if (p && USERIMG.has("ov:" + p.id)) blocks.push(h("button", { class: "btn dashed danger", onclick: () => { USERIMG.delete("ov:" + p.id); IDB.del("ov:" + p.id); resetProdImage(p.id); done("Image officielle rétablie pour « " + p.en + " »"); } }, "Supprimer ton image pour tous les « " + p.en + " »"));
+  openSheet(opts.title || "Image de l’article", blocks);
+}
+
+/* ---------- style ---------- */
+const LAYOUTS = [
+  { id: "list", fr: "Liste", svg: '<svg viewBox="0 0 46 34" fill="currentColor"><rect x="1" y="2" width="44" height="8" rx="3"/><rect x="1" y="13" width="44" height="8" rx="3"/><rect x="1" y="24" width="44" height="8" rx="3"/></svg>' },
+  { id: "grid2", fr: "Grille ×2", svg: '<svg viewBox="0 0 46 34" fill="currentColor"><rect x="1" y="2" width="21" height="14" rx="3"/><rect x="24" y="2" width="21" height="14" rx="3"/><rect x="1" y="18" width="21" height="14" rx="3"/><rect x="24" y="18" width="21" height="14" rx="3"/></svg>' },
+  { id: "grid3", fr: "Grille ×3", svg: '<svg viewBox="0 0 46 34" fill="currentColor"><rect x="1" y="2" width="13" height="14" rx="3"/><rect x="16.5" y="2" width="13" height="14" rx="3"/><rect x="32" y="2" width="13" height="14" rx="3"/><rect x="1" y="18" width="13" height="14" rx="3"/><rect x="16.5" y="18" width="13" height="14" rx="3"/><rect x="32" y="18" width="13" height="14" rx="3"/></svg>' }
+];
+function renderStyle() {
+  $$("[data-k]").forEach(i => { i.value = st[i.dataset.k] || ""; i.oninput = () => { st[i.dataset.k] = i.value; if (i.dataset.k === "name") renderProfiles(); changed(); }; });
+  $$("#typeSeg button").forEach(b => { b.classList.toggle("on", b.dataset.y === st.type); b.onclick = () => { st.type = b.dataset.y; renderAll(); changed(); }; });
+  const th = $("#themes"); th.textContent = "";
+  Object.entries(THEMES).forEach(([k, T]) => { const i = h("i", { style: `background:linear-gradient(160deg,${T.bg1},${T.bg2});--a:${T.acc}` }); th.append(h("button", { class: "theme" + (st.theme === k ? " on" : ""), onclick: () => { st.theme = k; renderStyle(); changed(); } }, i, T.name)); });
+  const ly = $("#layouts"); ly.textContent = "";
+  LAYOUTS.forEach(l => { const b = h("button", { class: "lay" + (st.layout === l.id ? " on" : ""), onclick: () => { st.layout = l.id; renderStyle(); changed(); } }); b.innerHTML = l.svg; b.append(l.fr); ly.append(b); });
+  $$("#sortSeg button").forEach(b => { b.classList.toggle("on", b.dataset.s === (st.sort || "manual")); b.onclick = () => { st.sort = b.dataset.s; renderStyle(); changed(); }; });
+  $$("#langSeg button").forEach(b => { b.classList.toggle("on", b.dataset.l === (st.lang || "en")); b.onclick = () => { st.lang = b.dataset.l; renderStyle(); changed(); }; });
+  $("#showTot").checked = st.showTotal !== false; $("#showTot").onchange = e => { st.showTotal = e.target.checked; changed(); };
+  $("#haveTitleBox").firstElementChild.hidden = st.type !== "trade";
+  const ci = $("#ctaIcon"); ci.textContent = "";
+  const ctaTarget = { get e() { return st.ctaE; }, set e(v) { st.ctaE = v; }, get img() { return st.ctaImg || ""; }, set img(v) { st.ctaImg = v; }, get ref() { return st.ctaRef; }, set ref(v) { st.ctaRef = v; }, name: "" };
+  const ctaState = () => st.ctaImg && st.ctaImg !== "none" ? srcState(st.ctaImg.startsWith("idb:") ? (USERIMG.get(st.ctaImg.slice(4)) || "") : st.ctaImg) : (st.ctaRef && st.ctaImg !== "none" ? prodState(st.ctaRef) : null);
+  ci.append(thumb(ctaState(), st.ctaE || "🔥"));
+  ci.onclick = () => imageSheet(null, { target: ctaTarget, title: "Icône du bandeau", noName: true, noOverride: true, state: ctaState });
+}
+$("#dupP").onclick = () => { const c = clone(st); c.id = uid(); c.name = (st.name || "Profil") + " (copie)"; c.wants.forEach(w => w.uid = uid()); c.have.forEach(w => w.uid = uid()); STATE.list.splice(STATE.list.indexOf(st) + 1, 0, c); selectProfile(c.id); toast("Profil dupliqué"); };
+let delArm = 0;
+$("#delP").onclick = function () {
+  if (STATE.list.length < 2) return toast("Garde au moins un profil.");
+  if (!delArm) { delArm = 1; this.textContent = "Confirmer ?"; setTimeout(() => { delArm = 0; this.textContent = "Supprimer"; }, 3000); return; }
+  delArm = 0; this.textContent = "Supprimer";
+  const i = STATE.list.indexOf(st); STATE.list.splice(i, 1); selectProfile(STATE.list[Math.max(0, i - 1)].id); toast("Profil supprimé");
+};
+let rstArm = 0;
+$("#resetP").onclick = function () {
+  if (!rstArm) { rstArm = 1; this.textContent = "Appuie encore pour confirmer"; setTimeout(() => { rstArm = 0; this.textContent = "Réinitialiser ce profil"; }, 3000); return; }
+  rstArm = 0; this.textContent = "Réinitialiser ce profil";
+  Object.assign(st, defaults(st.type), { id: st.id, name: st.name }); renderAll(); changed(); toast("Profil réinitialisé");
+};
+
+/* ---------- export ---------- */
+const fname = () => (slug(st.name || "annonce") || "annonce") + ".png";
+function getBlob() { draw(); return new Promise((res, rej) => { try { cv.toBlob(b => b ? res(b) : rej(new Error("blob")), "image/png"); } catch (e) { rej(e); } }); }
+function saveBlob(b, name) { const u = URL.createObjectURL(b), a = h("a", { href: u, download: name }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); }
+async function download() { try { saveBlob(await getBlob(), fname()); toast("Image téléchargée ✔"); } catch (e) { toast("Export impossible (image externe bloquée). Remplace-la dans « Images »."); } }
+$("#dl").onclick = download;
+$("#dlTab").onclick = async () => {
+  // Sur mobile : la feuille de partage permet « Enregistrer l’image » ou d’envoyer directement sur Discord.
+  if (navigator.canShare && matchMedia("(pointer:coarse)").matches) { try { const f = new File([await getBlob()], fname(), { type: "image/png" }); if (navigator.canShare({ files: [f] })) { await navigator.share({ files: [f] }); return; } } catch (e) { if (e && e.name === "AbortError") return; } }
+  download();
+};
+$("#share").onclick = async () => {
+  try {
+    const f = new File([await getBlob()], fname(), { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) await navigator.share({ files: [f] });
+    else { saveBlob(f, fname()); toast("Partage indisponible : image téléchargée"); }
+  } catch (e) { if (!e || e.name !== "AbortError") toast("Partage impossible"); }
+};
+$("#copy").onclick = async () => {
+  try {
+    if (!window.ClipboardItem) throw 0;
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": getBlob() })]);
+    toast("Image copiée : colle-la dans Discord ✔");
+  } catch (e) { toast("Copie non prise en charge ici : utilise Télécharger."); }
+};
+
+/* ---------- sauvegarde ---------- */
+$("#bkOut").onclick = () => {
+  const imgs = {}; USERIMG.forEach((v, k) => imgs[k] = v);
+  saveBlob(new Blob([JSON.stringify({ app: "hd-studio", v: 5, state: STATE, custom: CUSTOM, images: imgs })], { type: "application/json" }), "hayday-studio-sauvegarde.json");
+  toast("Sauvegarde exportée ✔");
+};
+$("#bkIn").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const o = JSON.parse(await f.text());
+    if (o.app === "hd-studio" && o.state && Array.isArray(o.state.list)) {
+      STATE = o.state; CUSTOM = o.custom || []; store.set("hd5_custom", CUSTOM);
+      Object.entries(o.images || {}).forEach(([k, v]) => { USERIMG.set(k, v); IDB.put(k, v); });
+    } else if (Array.isArray(o.l)) { store.set("tp4", o); localStorage.removeItem("hd5_state"); loadState(); }
+    else throw 0;
+    IMGS.clear(); buildCatalog();
+    st = STATE.list.find(p => p.id === STATE.active) || STATE.list[0]; STATE.active = st.id;
+    renderAll(); renderCustom(); changed(); toast("Sauvegarde restaurée ✔");
+  } catch (err) { toast("Fichier de sauvegarde invalide."); }
+};
+
+/* =====================================================================
+   7. ONGLET IMAGES — diagnostic, association en masse, produits perso, pack ZIP
+   ===================================================================== */
+let imgFilter = "all", imgLimit = 60;
+const IMG_FILTERS = [["all", "Tous"], ["miss", "Sans image"], ["mine", "Mes images"], ["pack", "Lots"]];
+function renderImgGrid() {
+  if (document.body.dataset.tab !== "images") return;
+  const f = $("#imgFilter"); f.textContent = "";
+  IMG_FILTERS.forEach(([k, l]) => f.append(h("button", { class: "chip" + (imgFilter === k ? " on" : ""), onclick: () => { imgFilter = k; imgLimit = 60; renderImgGrid(); } }, l)));
+  let list = search($("#iq").value, "all");
+  if (imgFilter === "miss") list = list.filter(p => { const s = IMGS.get(p.id); return s && s.fail; });
+  if (imgFilter === "mine") list = list.filter(p => USERIMG.has("ov:" + p.id) || p.custom);
+  if (imgFilter === "pack") list = list.filter(p => p.parts);
+  const g = $("#imgGrid"); g.textContent = "";
+  if (!list.length) g.append(h("div", { class: "empty", style: "grid-column:1/-1" }, imgFilter === "miss" ? "Aucune image manquante parmi les produits vérifiés. Lance « Vérifier toutes les images »." : "Aucun produit."));
+  list.slice(0, imgLimit).forEach(p => {
+    const s = prodState(p.id);
+    const t = h("button", { class: "tile" + (s.fail ? " miss" : ""), onclick: () => productSheet(p) }, thumb(s, p.e), h("b", null, p.en), h("small", null, USERIMG.has("ov:" + p.id) ? "✎ ton image" : s.fail ? "⚠ introuvable" : p.parts ? "Lot de 3" : p.fr ? frName(p) : ""));
+    if (!s.ok && !s.fail) s.subs.add(() => { if (s.fail) { t.classList.add("miss"); t.lastChild.textContent = "⚠ introuvable"; } });
+    g.append(t);
+  });
+  $("#moreImg").hidden = list.length <= imgLimit;
+  updateImgStats();
+}
+$("#moreImg").onclick = () => { imgLimit += 90; renderImgGrid(); };
+$("#iq").addEventListener("input", debounce(() => { imgLimit = 60; renderImgGrid(); }, 100));
+const updateImgStats = debounce(() => {
+  const all = CAT.list.length; let ok = 0, miss = 0;
+  CAT.list.forEach(p => { const s = IMGS.get(p.id); if (s && s.ok) ok++; else if (s && s.fail) miss++; });
+  $("#stAll").textContent = all; $("#stOk").textContent = ok; $("#stMiss").textContent = miss;
+}, 150);
+function productSheet(p) {
+  const s = prodState(p.id);
+  const file = h("input", { type: "file", accept: "image/*" });
+  const done = m => { closeSheet(); renderImgGrid(); renderResults(); renderLists(); changed(); toast(m); };
+  file.onchange = async () => {
+    try {
+      const d = await processFile(file.files[0]);
+      if (p.custom) { USERIMG.set("c:" + p.id, d); IDB.put("c:" + p.id, d); }
+      else { USERIMG.set("ov:" + p.id, d); IDB.put("ov:" + p.id, d); }
+      resetProdImage(p.id); done("Image enregistrée pour « " + p.en + " »");
+    } catch (e) { toast("Image illisible."); }
+  };
+  const wiki = "https://hayday.fandom.com/wiki/" + encodeURIComponent((p.file || p.en.replace(/ /g, "_")).replace(/ /g, "_"));
+  openSheet(p.en, [
+    h("div", { class: "bigprev" }, thumb(s, p.e), h("div", null, h("b", null, p.en), h("small", null, (p.fr ? frName(p) + " · " : "") + (USERIMG.has("ov:" + p.id) ? "ton image" : p.custom ? "produit perso" : p.parts ? "lot composé automatiquement" : s.ok ? "image du wiki" : s.fail ? "image introuvable" : "chargement…")))),
+    h("div", { class: "menu" },
+      h("label", { class: "filebtn", style: "display:block" }, h("button", { type: "button", style: "width:100%;pointer-events:none" }, h("i", null, "📷"), "Importer une image pour ce produit"), file),
+      !p.custom && !p.parts ? h("a", { href: wiki, target: "_blank", rel: "noopener", style: "text-decoration:none;color:inherit" }, h("button", { type: "button", style: "width:100%" }, h("i", null, "🔗"), "Ouvrir la page du wiki")) : null,
+      USERIMG.has("ov:" + p.id) ? h("button", { class: "danger", onclick: () => { USERIMG.delete("ov:" + p.id); IDB.del("ov:" + p.id); resetProdImage(p.id); done("Image du jeu rétablie"); } }, h("i", null, "↺"), "Revenir à l’image du jeu") : null,
+      s.fail ? h("button", { onclick: () => { IMGS.delete(p.id); delete URLS.m[p.file]; API_DOWN = false; closeSheet(); renderImgGrid(); } }, h("i", null, "⟳"), "Réessayer le chargement") : null),
+    !p.custom && !p.parts ? h("p", { class: "hint", style: "margin:0" }, "Astuce : sur le wiki, appuie longuement sur l’image du produit → « Enregistrer », puis importe-la ici.") : null
+  ]);
+}
+$("#chkAll").onclick = () => {
+  const ids = CAT.list.map(p => p.id), bar = $("#chkBar"), i = bar.firstElementChild; bar.hidden = false;
+  const sts = ids.map(prodState);
+  const tick = () => { const d = sts.filter(s => s.ok || s.fail).length; i.style.width = (d / sts.length * 100) + "%"; updateImgStats(); if (d < sts.length) setTimeout(tick, 250); else { toast("Vérification terminée : " + sts.filter(s => s.ok).length + " images OK"); setTimeout(() => bar.hidden = true, 800); renderImgGrid(); } };
+  tick();
+};
+
+/* ---------- association en masse ---------- */
+let bulk = [];
+$("#bulkIn").onchange = async e => {
+  const files = [...e.target.files]; e.target.value = ""; if (!files.length) return;
+  bulk = [];
+  for (const f of files) {
+    try {
+      const d = await processFile(f);
+      const base = f.name.replace(/\.[a-z0-9]+$/i, "").replace(/[@_-]?\d+x$/i, "").replace(/[_-]?(icon|item|hd|hayday|hay day)$/i, "").replace(/^(hd|hayday)[_-]/i, "");
+      const p = findProduct(base.replace(/[_-]+/g, " ")) || search(base.replace(/[_-]+/g, " "), "all")[0] || null;
+      bulk.push({ name: f.name, data: d, id: p ? p.id : "" });
+    } catch (err) {}
+  }
+  renderBulk();
+};
+function catalogSelect(val, onch) {
+  const s = h("select", { class: "sel", onchange: () => onch(s.value) });
+  s.append(h("option", { value: "" }, "— ne pas associer —"));
+  CATS.filter(c => !["pop", "recent", "all"].includes(c.id)).forEach(c => {
+    const items = CAT.list.filter(p => p.cat === c.id); if (!items.length) return;
+    const og = h("optgroup", { label: c.fr }); items.forEach(p => og.append(h("option", { value: p.id, selected: p.id === val }, p.en + (p.fr ? " · " + frName(p) : "")))); s.append(og);
+  });
+  return s;
+}
+function renderBulk() {
+  const L = $("#bulkList"); L.textContent = "";
+  bulk.forEach(b => L.append(h("div", { class: "match" }, h("img", { src: b.data, alt: "" }), h("div", { class: "stack", style: "gap:4px;min-width:0" }, h("div", { class: "fn" }, b.name), catalogSelect(b.id, v => b.id = v)))));
+  $("#bulkOk").hidden = !bulk.length;
+  if (bulk.length) toast(bulk.filter(b => b.id).length + " / " + bulk.length + " images reconnues");
+}
+$("#bulkOk").onclick = () => {
+  let n = 0;
+  bulk.forEach(b => { if (!b.id) return; const p = CAT.byId[b.id]; const k = (p && p.custom ? "c:" : "ov:") + b.id; USERIMG.set(k, b.data); IDB.put(k, b.data); resetProdImage(b.id); n++; });
+  bulk = []; renderBulk(); renderImgGrid(); renderResults(); renderLists(); changed();
+  toast(n + " image" + (n > 1 ? "s associées" : " associée") + " ✔");
+};
+
+/* ---------- produits personnalisés ---------- */
+let cuImg = "";
+$("#cuImgBtn").onclick = () => $("#cuFile").click();
+const paintCuBtn = () => { const b = $("#cuImgBtn"); b.textContent = ""; b.append(cuImg ? thumb(srcState(cuImg), "⭐") : h("span", { class: "th", style: "font-size:24px" }, "📷")); };
+$("#cuFile").onchange = async e => { try { cuImg = await processFile(e.target.files[0]); paintCuBtn(); } catch (err) { toast("Image illisible."); } e.target.value = ""; };
+$("#cuAdd").onclick = () => {
+  const en = $("#cuEn").value.trim(); if (!en) return toast("Donne un nom au produit.");
+  if (!cuImg) return toast("Ajoute une image.");
+  let id = "perso-" + slug(en); while (CAT.byId[id]) id += "-2";
+  const c = { id, en, fr: $("#cuFr").value.trim(), e: "⭐" };
+  CUSTOM.push(c); store.set("hd5_custom", CUSTOM);
+  USERIMG.set("c:" + id, cuImg); IDB.put("c:" + id, cuImg);
+  addProduct({ id, en, fr: c.fr, e: "⭐", cat: "perso", custom: true });
+  cuImg = ""; $("#cuEn").value = ""; $("#cuFr").value = ""; paintCuBtn();
+  renderCustom(); renderCats(); renderResults(); toast("« " + en + " » ajouté à la bibliothèque ✔");
+};
+function renderCustom() {
+  const L = $("#cuList"); L.textContent = "";
+  CUSTOM.forEach(c => L.append(h("div", { class: "custom" }, thumb(prodState(c.id), c.e || "⭐"), h("div", { style: "min-width:0" }, h("b", null, c.en), h("div", { class: "hint", style: "margin:0" }, c.fr || "—")),
+    h("button", { class: "ib", "aria-label": "Supprimer", onclick: () => {
+      if (!confirm("Supprimer « " + c.en + " » de la bibliothèque ?")) return;
+      CUSTOM = CUSTOM.filter(x => x !== c); store.set("hd5_custom", CUSTOM); USERIMG.delete("c:" + c.id); IDB.del("c:" + c.id);
+      CAT.list = CAT.list.filter(p => p.id !== c.id); delete CAT.byId[c.id]; IMGS.delete(c.id);
+      renderCustom(); renderCats(); renderResults(); toast("Produit supprimé");
+    } }, "✕"))));
+}
+
+/* ---------- pack ZIP (images/ + manifest.json) ---------- */
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = b => { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+function makeZip(files) {
+  const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+  files.forEach(f => {
+    const name = enc.encode(f.name), crc = crc32(f.data), sz = f.data.length;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(8, 0, true); lh.setUint16(10, 0, true); lh.setUint16(12, 0x21, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, sz, true); lh.setUint32(22, sz, true); lh.setUint16(26, name.length, true);
+    parts.push(new Uint8Array(lh.buffer), name, f.data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(14, 0x21, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, sz, true); ch.setUint32(24, sz, true); ch.setUint16(28, name.length, true); ch.setUint32(42, off, true);
+    cen.push(new Uint8Array(ch.buffer), name);
+    off += 30 + name.length + sz;
+  });
+  const cenSize = cen.reduce((a, b) => a + b.length, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cenSize, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...cen, new Uint8Array(end.buffer)], { type: "application/zip" });
+}
+const toPng = el => new Promise(res => {
+  const c = document.createElement("canvas"), iw = el.naturalWidth || el.width, ih = el.naturalHeight || el.height, k = Math.min(1, 192 / Math.max(iw, ih));
+  c.width = Math.max(1, Math.round(iw * k)); c.height = Math.max(1, Math.round(ih * k));
+  const g = c.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(el, 0, 0, c.width, c.height);
+  try { c.toBlob(b => b ? b.arrayBuffer().then(a => res(new Uint8Array(a))) : res(null), "image/png"); } catch (e) { res(null); }
+});
+/** Charge toutes les images et prépare les fichiers images/<id>.png + manifest.json. */
+async function collectPack(setP, setT) {
+  const prods = CAT.list.filter(p => !p.parts && !p.custom), sts = prods.map(p => prodState(p.id));
+  setT("Chargement des images…");
+  await new Promise(res => { const t = () => { const d = sts.filter(s => s.ok || s.fail).length; setP(d / sts.length * 50); d < sts.length ? setTimeout(t, 250) : res(); }; t(); });
+  setT("Préparation…");
+  const files = [], ids = [];
+  for (let i = 0; i < prods.length; i++) {
+    const s = sts[i]; if (!s.ok) continue;
+    const data = await toPng(s.el); if (!data) continue;
+    files.push({ name: "images/" + prods[i].id + ".png", data }); ids.push(prods[i].id);
+    setP(50 + i / prods.length * 10);
+  }
+  files.push({ name: "images/manifest.json", data: new TextEncoder().encode(JSON.stringify({ version: 1, generated: new Date().toISOString(), ids }, null, 1)) });
+  return { files, ids };
+}
+const bar = { show() { $("#zipBar").hidden = false; }, set(p) { $("#zipBar").firstElementChild.style.width = p + "%"; }, hide() { setTimeout(() => $("#zipBar").hidden = true, 900); } };
+$("#zipBtn").onclick = async () => {
+  const btn = $("#zipBtn"); btn.disabled = true; bar.show();
+  const { files, ids } = await collectPack(p => bar.set(p * 1.6), t => btn.textContent = t);
+  if (!ids.length) { toast("Aucune image chargée : vérifie ta connexion."); }
+  else { saveBlob(makeZip(files), "hayday-images.zip"); toast(ids.length + " images dans le pack ✔"); }
+  btn.disabled = false; btn.textContent = "ou télécharger le pack en ZIP"; bar.set(100); bar.hide();
+};
+
+/* ---------- envoi direct sur GitHub (un seul commit) ---------- */
+(function initGh() {
+  const g = store.get("hd5_gh", {});
+  let repo = g.repo || "";
+  if (!repo && /\.github\.io$/i.test(location.hostname)) { const own = location.hostname.split(".")[0], seg = location.pathname.split("/").filter(Boolean)[0]; repo = own + "/" + (seg && !/\.html?$/.test(seg) ? seg : location.hostname); }
+  $("#ghRepo").value = repo; $("#ghBranch").value = g.branch || "main"; $("#ghToken").value = g.token || ""; $("#ghRemember").checked = !!g.token;
+})();
+const b64 = u8 => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+$("#ghBtn").onclick = async () => {
+  const repo = $("#ghRepo").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\.git$|\/$/g, ""), branch = $("#ghBranch").value.trim() || "main", token = $("#ghToken").value.trim();
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) return toast("Indique le dépôt sous la forme pseudo/nom-du-depot");
+  if (!token) return toast("Colle ton jeton GitHub (voir « Comment obtenir le jeton »)");
+  store.set("hd5_gh", { repo, branch, token: $("#ghRemember").checked ? token : "" });
+  const btn = $("#ghBtn"), stt = $("#ghStatus"), say = t => stt.textContent = t;
+  const api = async (path, method, body) => {
+    const r = await fetch("https://api.github.com/repos/" + repo + path, { method: method || "GET", headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github+json" }, body: body ? JSON.stringify(body) : undefined });
+    if (!r.ok) { const e = new Error(r.status); e.status = r.status; try { e.msg = (await r.json()).message; } catch (x) {} throw e; }
+    return r.json();
+  };
+  btn.disabled = true; bar.show(); bar.set(0);
+  try {
+    say("Connexion à GitHub…");
+    const ref = await api("/git/ref/heads/" + encodeURIComponent(branch));
+    const base = await api("/git/commits/" + ref.object.sha);
+    const { files, ids } = await collectPack(p => bar.set(p), say);
+    if (!ids.length) throw Object.assign(new Error("noimg"), { msg: "Aucune image n’a pu être chargée depuis le wiki." });
+    const tree = []; let done = 0, i = 0;
+    say("Envoi des images… 0 / " + files.length);
+    const worker = async () => { while (i < files.length) { const f = files[i++]; const bl = await api("/git/blobs", "POST", { content: b64(f.data), encoding: "base64" }); tree.push({ path: f.name, mode: "100644", type: "blob", sha: bl.sha }); done++; bar.set(60 + done / files.length * 35); say("Envoi des images… " + done + " / " + files.length); } };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    say("Enregistrement du commit…");
+    const t = await api("/git/trees", "POST", { base_tree: base.tree.sha, tree });
+    const c = await api("/git/commits", "POST", { message: "Ajout des images Hay Day (" + ids.length + ")", tree: t.sha, parents: [ref.object.sha] });
+    await api("/git/refs/heads/" + encodeURIComponent(branch), "PATCH", { sha: c.sha });
+    bar.set(100); say("✅ " + ids.length + " images envoyées. GitHub Pages les publie d’ici 1 à 2 minutes, puis recharge le site.");
+    toast("Images envoyées sur GitHub ✔");
+  } catch (e) {
+    const m = e.status === 401 ? "Jeton invalide ou expiré." : e.status === 403 ? "Le jeton n’a pas le droit d’écrire : mets « Contents : Read and write »." : e.status === 404 ? "Dépôt ou branche introuvable (ou le jeton n’a pas accès à ce dépôt)." : e.status === 409 ? "Le dépôt est vide : ajoute d’abord index.html." : (e.msg || "Échec de l’envoi. Vérifie ta connexion.");
+    say("❌ " + m); toast(m);
+  }
+  btn.disabled = false; bar.hide();
+};
+
+/* =====================================================================
+   8. DÉMARRAGE
+   ===================================================================== */
+(async function init() {
+  await IDB.open();
+  USERIMG = await IDB.all();
+  buildCatalog();
+  loadState();
+  buildCatalog(); // inclut les produits perso migrés
+  renderAll(); renderCustom(); paintCuBtn(); tab("items");
+  await loadLocalManifest();
+  if (LOCAL.size) { IMGS.clear(); renderAll(); }
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+  if (document.fonts && document.fonts.load) Promise.all([document.fonts.load("400 40px 'Lilita One'"), document.fonts.load("900 30px Nunito"), document.fonts.load("800 30px Nunito"), document.fonts.load("700 30px Nunito")]).then(scheduleDraw).catch(() => {});
+  setTimeout(() => refreshWikiList(false), 1500);
+  window.addEventListener("pagehide", () => store.set("hd5_state", STATE));
+})();
+
+</script>
+<!-- Images des produits : wiki communautaire Hay Day (hayday.fandom.com). Hay Day et ses visuels appartiennent à Supercell. -->
+</body>
+</html>
